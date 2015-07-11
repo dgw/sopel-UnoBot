@@ -31,6 +31,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
+import willie.module as module
 import random
 from datetime import datetime, timedelta
 
@@ -388,45 +389,47 @@ class UnoBot:
 
 unobot = UnoBot ()
 
-def uno(phenny, input):
-    unobot.start (phenny, input.nick)
-uno.commands = ['uno']
-uno.priority = 'high'
+@module.commands('uno')
+@module.example('.uno')
+@module.priority('high')
+def uno(bot, trigger):
+    unobot.start (bot, trigger.nick)
 
-def unostop(phenny, input):
-    unobot.stop (phenny, input)
-unostop.commands = ['unostop']
-unostop.priority = 'high'
+@module.commands('unostop')
+@module.example('.unostop')
+@module.priority('high')
+def unostop(bot, trigger):
+    unobot.stop (bot, trigger)
 
-def join(phenny, input):
-    unobot.join (phenny, input)
-join.rule = '^join$'
-join.priority = 'high'
+@module.rule('^join$')
+@module.priority('high')
+def join(bot, trigger):
+    unobot.join (bot, trigger)
 
-def deal(phenny, input):
-    unobot.deal (phenny, input)
-deal.commands = ['deal']
-deal.priority = 'high'
+@module.commands('deal')
+@module.priority('high')
+def deal(bot, trigger):
+    unobot.deal (bot, trigger)
 
-def play(phenny, input):
-    unobot.play (phenny, input)
-play.commands = ['play']
-play.priority = 'high'
+@module.commands('play')
+@module.priority('high')
+def play(bot, trigger):
+    unobot.play (bot, trigger)
 
-def draw(phenny, input):
-    unobot.draw (phenny, input)
-draw.commands = ['draw']
-draw.priority = 'high'
+@module.commands('draw')
+@module.priority('high')
+def draw(bot, trigger):
+    unobot.draw (bot, trigger)
 
-def passs(phenny, input):
-    unobot.passs (phenny, input)
-passs.commands = ['pass']
-passs.priority = 'high'
+@module.commands('pass')
+@module.priority('high')
+def passs(bot, trigger):
+    unobot.passs (bot, trigger)
 
-def unotop10 (phenny, input):
-    unobot.top10 (phenny)
-unotop10.commands = ['unotop10']
-unotop10.priority = 'high'
+@module.commands('unotop10')
+@module.priority('high')
+def unotop10 (bot, trigger):
+    unobot.top10 (bot)
 
 if __name__ == '__main__':
        print __doc__.strip()
