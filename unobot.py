@@ -56,7 +56,6 @@ STRINGS = {
     'UNO'             : 'UNO! %s has ONE card left!',
     'WIN'             : 'We have a winner: %s!!! This game took %s',
     'DRAWN_ALREADY'   : 'You\'ve already drawn, either play or pass.',
-    'DRAWS'           : '%s draws a card',
     'DRAWN_CARD'      : 'Drawn card: %s',
     'DRAW_FIRST'      : '%s, you need to draw first!',
     'PASSED'          : '%s passed!',
@@ -213,8 +212,6 @@ class UnoBot:
             bot.msg(CHANNEL, STRINGS['DRAWN_ALREADY'])
             return
         self.drawn = True
-        bot.msg(CHANNEL,
-                STRINGS['DRAWS'] % self.playerOrder[self.currentPlayer])
         c = self.getCard()
         self.players[self.playerOrder[self.currentPlayer]].append(c)
         bot.notice(STRINGS['DRAWN_CARD'] % self.renderCards([c]), trigger.nick)
