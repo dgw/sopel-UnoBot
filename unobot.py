@@ -310,20 +310,20 @@ class UnoBot:
         ret = []
         for c in sorted(cards):
             if c in ['W', 'WD4']:
-                ret.append('\x0300,01[' + c + ']')
+                ret.append('\x0301[' + c + ']')
                 continue
             if c[0] == 'W':
                 c = c[-1] + '*'
-            t = '\x0300,01\x03'
+            t = '\x0300\x03'
             if c[0] == 'B':
-                t += '12,01['
+                t += '12['
             if c[0] == 'Y':
-                t += '08,01['
+                t += '08['
             if c[0] == 'G':
-                t += '09,01['
+                t += '09['
             if c[0] == 'R':
-                t += '04,01['
-            t += c[1:] + ']\x0300,01'
+                t += '04['
+            t += c[1:] + ']\x03'
             ret.append(t)
         return ''.join(ret)
 
