@@ -193,9 +193,12 @@ class UnoBot:
         if len(self.players[self.playerOrder[pl]]) == 1:
             bot.msg(CHANNEL, STRINGS['UNO'] % self.playerOrder[pl])
         elif len(self.players[self.playerOrder[pl]]) == 0:
+            game_duration = datetime.now() - self.startTime
+            hours, remainder = divmod(game_duration.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            game_duration = '%.2d:%.2d:%.2d' % (hours, minutes, seconds)
             bot.msg(CHANNEL,
-                    STRINGS['WIN'] % (self.playerOrder[pl],
-                                      (datetime.now() - self.startTime)))
+                    STRINGS['WIN'] % (self.playerOrder[pl], game_duration))
             self.gameEnded(bot, self.playerOrder[pl])
             return
 
