@@ -34,8 +34,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import random
 from datetime import datetime, timedelta
 
-CHANNEL = '#unotest'
-SCOREFILE = "/home/tamas/unoscores.txt"
+CHANNEL = '#Kaede'
+SCOREFILE = "/var/lib/willie/unoscores.txt"
 
 STRINGS = {
     'ALREADY_STARTED' : '\x0300,01Game already started by %s! Type join to join!',
