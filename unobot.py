@@ -51,13 +51,13 @@ STRINGS = {
     'NEEDS_TO_DEAL'   : '%s needs to deal.',
     'ALREADY_DEALT'   : 'Already dealt.',
     'ON_TURN'         : 'It\'s %s\'s turn.',
-    'DONT_HAVE'       : 'You don\'t have that card, %s',
-    'DOESNT_PLAY'     : 'That card does not play, %s',
+    'DONT_HAVE'       : 'You don\'t have that card!',
+    'DOESNT_PLAY'     : 'That card can\'t be played now.',
     'UNO'             : 'UNO! %s has ONE card left!',
     'WIN'             : 'We have a winner: %s!!! This game took %s',
     'DRAWN_ALREADY'   : 'You\'ve already drawn, either play or pass.',
-    'DRAWN_CARD'      : 'Drawn card: %s',
-    'DRAW_FIRST'      : '%s, you need to draw first!',
+    'DRAWN_CARD'      : 'You drew: %s',
+    'DRAW_FIRST'      : 'You have to draw first.',
     'PASSED'          : '%s passed!',
     'NO_SCORES'       : 'No scores yet',
     'SCORE_ROW'       : '#%s %s (%s points %s games, %s won, %s wasted)',
@@ -173,13 +173,12 @@ class UnoBot:
             searchcard = (tok[1] + tok[2])
         if searchcard not in self.players[self.playerOrder[self.currentPlayer]
                                           ]:
-            bot.msg(CHANNEL, STRINGS['DONT_HAVE'] %
-                    self.playerOrder[self.currentPlayer])
+            bot.notice(STRINGS['DONT_HAVE'], self.playerOrder[self.currentPlayer])
             return
         playcard = (tok[1] + tok[2])
         if not self.cardPlayable(playcard):
-            bot.msg(CHANNEL, STRINGS['DOESNT_PLAY'] %
-                    self.playerOrder[self.currentPlayer])
+            bot.notice(STRINGS['DOESNT_PLAY'],
+                       self.playerOrder[self.currentPlayer])
             return
 
         self.drawn = False
@@ -212,7 +211,8 @@ class UnoBot:
                     STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
         if self.drawn:
-            bot.msg(CHANNEL, STRINGS['DRAWN_ALREADY'])
+            bot.notice(STRINGS['DRAWN_ALREADY'],
+                       self.playerOrder[self.currentPlayer])
             return
         self.drawn = True
         c = self.getCard()
@@ -228,8 +228,8 @@ class UnoBot:
                     STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
         if not self.drawn:
-            bot.msg(CHANNEL, STRINGS['DRAW_FIRST'] %
-                    self.playerOrder[self.currentPlayer])
+            bot.notice(STRINGS['DRAW_FIRST'],
+                       self.playerOrder[self.currentPlayer])
             return
         self.drawn = False
         bot.msg(CHANNEL,
