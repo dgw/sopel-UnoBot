@@ -90,26 +90,26 @@ class UnoBot:
         self.scoreFile = SCOREFILE
         self.deck = [ ]
     
-    def start(self, phenny, owner):
+    def start(self, bot, owner):
         if self.game_on:
-            phenny.msg (CHANNEL, STRINGS['ALREADY_STARTED'] % self.game_on)
+            bot.msg (CHANNEL, STRINGS['ALREADY_STARTED'] % self.game_on)
         else:
             self.game_on = owner
             self.deck = [ ]
-            phenny.msg (CHANNEL, STRINGS['GAME_STARTED'] % owner)
+            bot.msg (CHANNEL, STRINGS['GAME_STARTED'] % owner)
             self.players = { }
             self.players[owner] = [ ]
             self.playerOrder = [ owner ]
     
-    def stop (self, phenny, input):
+    def stop (self, bot, input):
         if input.nick == self.game_on:
-            phenny.msg (CHANNEL, STRINGS['GAME_STOPPED'])
+            bot.msg (CHANNEL, STRINGS['GAME_STOPPED'])
             self.game_on = False
         elif self.game_on:
-            phenny.msg (CHANNEL, STRINGS['CANT_STOP'] % self.game_on)
+            bot.msg (CHANNEL, STRINGS['CANT_STOP'] % self.game_on)
             
-    def join (self, phenny, input):
-        #print dir (phenny.bot)
+    def join (self, bot, input):
+        #print dir (bot.bot)
         #print dir (input)
         if self.game_on:
             if input.nick not in self.players:
@@ -118,26 +118,26 @@ class UnoBot:
                 if self.deck:
                     for i in xrange (0, 7):
                         self.players[input.nick].append (self.getCard ())
-                    phenny.msg (CHANNEL, STRINGS['DEALING_IN'] % (input.nick, self.playerOrder.index (input.nick) + 1))
+                    bot.msg (CHANNEL, STRINGS['DEALING_IN'] % (input.nick, self.playerOrder.index (input.nick) + 1))
                 else:
-                    phenny.msg (CHANNEL, STRINGS['JOINED'] % (input.nick, self.playerOrder.index (input.nick) + 1))
+                    bot.msg (CHANNEL, STRINGS['JOINED'] % (input.nick, self.playerOrder.index (input.nick) + 1))
                     if len (self.players) > 1:
-                        phenny.msg (CHANNEL, STRINGS['ENOUGH'])
+                        bot.msg (CHANNEL, STRINGS['ENOUGH'])
         else:
-            phenny.msg (CHANNEL, STRINGS['NOT_STARTED'])
+            bot.msg (CHANNEL, STRINGS['NOT_STARTED'])
     
-    def deal (self, phenny, input):
+    def deal (self, bot, input):
         if not self.game_on:
-            phenny.msg (CHANNEL, STRINGS['NOT_STARTED'])
+            bot.msg (CHANNEL, STRINGS['NOT_STARTED'])
             return
         if len (self.players) < 2:
-            phenny.msg (CHANNEL, STRINGS['NOT_ENOUGH'])
+            bot.msg (CHANNEL, STRINGS['NOT_ENOUGH'])
             return
         if input.nick != self.game_on:
-            phenny.msg (CHANNEL, STRINGS['NEEDS_TO_DEAL'] % self.game_on)
+            bot.msg (CHANNEL, STRINGS['NEEDS_TO_DEAL'] % self.game_on)
             return
         if len (self.deck):
-            phenny.msg (CHANNEL, STRINGS['ALREADY_DEALT'])
+            bot.msg (CHANNEL, STRINGS['ALREADY_DEALT'])
             return
         self.startTime = datetime.now ()
         self.deck = self.createnewdeck ()
@@ -147,14 +147,14 @@ class UnoBot:
         self.topCard = self.getCard ()
         while self.topCard in ['W', 'WD4']: self.topCard = self.getCard ()
         self.currentPlayer = 1
-        self.cardPlayed (phenny, self.topCard)
-        self.showOnTurn (phenny)
+        self.cardPlayed (bot, self.topCard)
+        self.showOnTurn (bot)
     
-    def play (self, phenny, input):
+    def play (self, bot, input):
         if not self.game_on or not self.deck:
             return
         if input.nick != self.playerOrder[self.currentPlayer]:
-            phenny.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
         tok = [z.strip () for z in str (input).upper ().split (' ')]
         if len (tok) != 3:
@@ -164,11 +164,11 @@ class UnoBot:
             searchcard = tok[1]
         else: searchcard = (tok[1] + tok[2])
         if searchcard not in self.players[self.playerOrder[self.currentPlayer]]:
-            phenny.msg (CHANNEL, STRINGS['DONT_HAVE'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['DONT_HAVE'] % self.playerOrder[self.currentPlayer])
             return
         playcard = (tok[1] + tok[2])
         if not self.cardPlayable (playcard):
-            phenny.msg (CHANNEL, STRINGS['DOESNT_PLAY'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['DOESNT_PLAY'] % self.playerOrder[self.currentPlayer])
             return
         
         self.drawn = False
@@ -177,48 +177,48 @@ class UnoBot:
         pl = self.currentPlayer
         
         self.incPlayer ()
-        self.cardPlayed (phenny, playcard)
+        self.cardPlayed (bot, playcard)
 
         if len (self.players[self.playerOrder[pl]]) == 1:
-            phenny.msg (CHANNEL, STRINGS['UNO'] % self.playerOrder[pl])
+            bot.msg (CHANNEL, STRINGS['UNO'] % self.playerOrder[pl])
         elif len (self.players[self.playerOrder[pl]]) == 0:
-            phenny.msg (CHANNEL, STRINGS['WIN'] % (self.playerOrder[pl], (datetime.now () - self.startTime)))
-            self.gameEnded (phenny, self.playerOrder[pl])
+            bot.msg (CHANNEL, STRINGS['WIN'] % (self.playerOrder[pl], (datetime.now () - self.startTime)))
+            self.gameEnded (bot, self.playerOrder[pl])
             return
             
-        self.showOnTurn (phenny)
+        self.showOnTurn (bot)
 
-    def draw (self, phenny, input):
+    def draw (self, bot, input):
         if not self.game_on or not self.deck:
             return
         if input.nick != self.playerOrder[self.currentPlayer]:
-            phenny.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
         if self.drawn:
-            phenny.msg (CHANNEL, STRINGS['DRAWN_ALREADY'])
+            bot.msg (CHANNEL, STRINGS['DRAWN_ALREADY'])
             return
         self.drawn = True
-        phenny.msg (CHANNEL, STRINGS['DRAWS'] % self.playerOrder[self.currentPlayer])
+        bot.msg (CHANNEL, STRINGS['DRAWS'] % self.playerOrder[self.currentPlayer])
         c = self.getCard ()
         self.players[self.playerOrder[self.currentPlayer]].append (c)
-        phenny.notice (input.nick, STRINGS['DRAWN_CARD'] % self.renderCards ([c]))
+        bot.notice (input.nick, STRINGS['DRAWN_CARD'] % self.renderCards ([c]))
 
     # this is not a typo, avoiding collision with Python's pass keyword
-    def passs (self, phenny, input):
+    def passs (self, bot, input):
         if not self.game_on or not self.deck:
             return
         if input.nick != self.playerOrder[self.currentPlayer]:
-            phenny.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
         if not self.drawn:
-            phenny.msg (CHANNEL, STRINGS['DRAW_FIRST'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['DRAW_FIRST'] % self.playerOrder[self.currentPlayer])
             return
         self.drawn = False
-        phenny.msg (CHANNEL, STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
+        bot.msg (CHANNEL, STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
         self.incPlayer ()
-        self.showOnTurn (phenny)
+        self.showOnTurn (bot)
     
-    def top10 (self, phenny):
+    def top10 (self, bot):
         from copy import copy
         prescores = [ ]
         try:
@@ -232,10 +232,10 @@ class UnoBot:
         except: pass
         prescores = sorted (prescores, lambda x, y: cmp ((y[1] != '0') and (float (y[3]) / int (y[1])) or 0, (x[1] != '0') and (float (x[3]) / int (x[1])) or 0))
         if not prescores:
-            phenny.msg (CHANNEL, STRINGS['NO_SCORES'])
+            bot.msg (CHANNEL, STRINGS['NO_SCORES'])
         i = 1
         for z in prescores[:10]:
-            phenny.msg (CHANNEL, STRINGS['SCORE_ROW'] % (i, z[0], z[3], z[1], z[2], timedelta (seconds = int (z[4]))))
+            bot.msg (CHANNEL, STRINGS['SCORE_ROW'] % (i, z[0], z[3], z[1], z[2], timedelta (seconds = int (z[4]))))
             i += 1
 
     
@@ -259,9 +259,9 @@ class UnoBot:
             self.deck = self.createnewdeck ()        
         return ret
     
-    def showOnTurn (self, phenny):
-        phenny.msg (CHANNEL, STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer], self.renderCards ([self.topCard])))
-        phenny.notice (self.playerOrder[self.currentPlayer], STRINGS['YOUR_CARDS'] % self.renderCards (self.players[self.playerOrder[self.currentPlayer]]))
+    def showOnTurn (self, bot):
+        bot.msg (CHANNEL, STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer], self.renderCards ([self.topCard])))
+        bot.notice (self.playerOrder[self.currentPlayer], STRINGS['YOUR_CARDS'] % self.renderCards (self.players[self.playerOrder[self.currentPlayer]]))
         msg = STRINGS['NEXT_START']
         tmp = self.currentPlayer + self.way
         if tmp == len (self.players):
@@ -277,7 +277,7 @@ class UnoBot:
             if tmp < 0:
                 tmp = len (self.players) - 1
         msg += ' - '.join (arr)
-        phenny.notice (self.playerOrder[self.currentPlayer], msg)
+        bot.notice (self.playerOrder[self.currentPlayer], msg)
         
     def renderCards (self, cards):
         ret = [ ]
@@ -307,30 +307,30 @@ class UnoBot:
             return card[0] == self.topCard[-1]
         return ((card[0] == self.topCard[0]) or (card[1] == self.topCard[1])) and (card[0] not in ['W', 'WD4'])
     
-    def cardPlayed (self, phenny, card):
+    def cardPlayed (self, bot, card):
         if card[1:] == 'D2':
-            phenny.msg (CHANNEL, STRINGS['D2'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['D2'] % self.playerOrder[self.currentPlayer])
             z = [self.getCard (), self.getCard ()]
-            phenny.notice(self.playerOrder[self.currentPlayer], STRINGS['CARDS'] % self.renderCards (z))
+            bot.notice(self.playerOrder[self.currentPlayer], STRINGS['CARDS'] % self.renderCards (z))
             self.players[self.playerOrder[self.currentPlayer]].extend (z)
             self.incPlayer ()
         elif card[:2] == 'WD':
-            phenny.msg (CHANNEL, STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
             z = [self.getCard (), self.getCard (), self.getCard (), self.getCard ()]
-            phenny.notice(self.playerOrder[self.currentPlayer], STRINGS['CARDS'] % self.renderCards (z))
+            bot.notice(self.playerOrder[self.currentPlayer], STRINGS['CARDS'] % self.renderCards (z))
             self.players[self.playerOrder[self.currentPlayer]].extend (z)
             self.incPlayer ()
         elif card[1] == 'S':
-            phenny.msg (CHANNEL, STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
+            bot.msg (CHANNEL, STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
             self.incPlayer ()
         elif card[1] == 'R' and card[0] != 'W':
-            phenny.msg (CHANNEL, STRINGS['REVERSED'])
+            bot.msg (CHANNEL, STRINGS['REVERSED'])
             self.way = -self.way
             self.incPlayer ()
             self.incPlayer ()
         self.topCard = card
     
-    def gameEnded (self, phenny, winner):
+    def gameEnded (self, bot, winner):
         try:
             score = 0
             for p in self.players:
@@ -341,7 +341,7 @@ class UnoBot:
                         score += self.special_scores[c[1:]]
                     else:
                         score += int (c[1])
-            phenny.msg (CHANNEL, STRINGS['GAINS'] % (winner, score))
+            bot.msg (CHANNEL, STRINGS['GAINS'] % (winner, score))
             self.saveScores (self.players.keys (), winner, score, (datetime.now () - self.startTime).seconds)
         except Exception, e:
             print 'Score error: %s' % e
