@@ -72,218 +72,245 @@ STRINGS = {
     'SKIPPED'         : '%s is skipped!',
     'REVERSED'        : 'Order reversed!',
     'GAINS'           : '%s gains %s points!',
-}
+}  # yapf: disable
+
 
 class UnoBot:
-    def __init__ (self):
-        self.colored_card_nums = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2' ]
-        self.special_scores = { 'R' : 20, 'S' : 20, 'D2' : 20, 'WD4' : 50, 'W' : 50 }
+    def __init__(self):
+        self.colored_card_nums = ['0', '1', '2', '3', '4', '5', '6', '7', '8',
+                                  '9', 'R', 'S', 'D2']
+        self.special_scores = {'R': 20, 'S': 20, 'D2': 20, 'WD4': 50, 'W': 50}
         self.colors = 'RGBY'
-        self.special_cards = [ 'W', 'WD4' ]
-        self.players = { }
-        self.playerOrder = [ ]
+        self.special_cards = ['W', 'WD4']
+        self.players = {}
+        self.playerOrder = []
         self.game_on = False
         self.currentPlayer = 0
         self.topCard = None
         self.way = 1
         self.drawn = False
         self.scoreFile = SCOREFILE
-        self.deck = [ ]
-    
+        self.deck = []
+
     def start(self, bot, owner):
         if self.game_on:
-            bot.msg (CHANNEL, STRINGS['ALREADY_STARTED'] % self.game_on)
+            bot.msg(CHANNEL, STRINGS['ALREADY_STARTED'] % self.game_on)
         else:
             self.game_on = owner
-            self.deck = [ ]
-            bot.msg (CHANNEL, STRINGS['GAME_STARTED'] % owner)
-            self.players = { }
-            self.players[owner] = [ ]
-            self.playerOrder = [ owner ]
-    
-    def stop (self, bot, input):
+            self.deck = []
+            bot.msg(CHANNEL, STRINGS['GAME_STARTED'] % owner)
+            self.players = {}
+            self.players[owner] = []
+            self.playerOrder = [owner]
+
+    def stop(self, bot, input):
         if input.nick == self.game_on:
-            bot.msg (CHANNEL, STRINGS['GAME_STOPPED'])
+            bot.msg(CHANNEL, STRINGS['GAME_STOPPED'])
             self.game_on = False
         elif self.game_on:
-            bot.msg (CHANNEL, STRINGS['CANT_STOP'] % self.game_on)
-            
-    def join (self, bot, input):
+            bot.msg(CHANNEL, STRINGS['CANT_STOP'] % self.game_on)
+
+    def join(self, bot, input):
         #print dir (bot.bot)
         #print dir (input)
         if self.game_on:
             if input.nick not in self.players:
-                self.players[input.nick] = [ ]
-                self.playerOrder.append (input.nick)
+                self.players[input.nick] = []
+                self.playerOrder.append(input.nick)
                 if self.deck:
-                    for i in xrange (0, 7):
-                        self.players[input.nick].append (self.getCard ())
-                    bot.msg (CHANNEL, STRINGS['DEALING_IN'] % (input.nick, self.playerOrder.index (input.nick) + 1))
+                    for i in xrange(0, 7):
+                        self.players[input.nick].append(self.getCard())
+                    bot.msg(CHANNEL, STRINGS['DEALING_IN'] % (
+                        input.nick, self.playerOrder.index(input.nick) + 1
+                    ))
                 else:
-                    bot.msg (CHANNEL, STRINGS['JOINED'] % (input.nick, self.playerOrder.index (input.nick) + 1))
-                    if len (self.players) > 1:
-                        bot.msg (CHANNEL, STRINGS['ENOUGH'])
+                    bot.msg(CHANNEL, STRINGS['JOINED'] % (
+                        input.nick, self.playerOrder.index(input.nick) + 1
+                    ))
+                    if len(self.players) > 1:
+                        bot.msg(CHANNEL, STRINGS['ENOUGH'])
         else:
-            bot.msg (CHANNEL, STRINGS['NOT_STARTED'])
-    
-    def deal (self, bot, input):
+            bot.msg(CHANNEL, STRINGS['NOT_STARTED'])
+
+    def deal(self, bot, input):
         if not self.game_on:
-            bot.msg (CHANNEL, STRINGS['NOT_STARTED'])
+            bot.msg(CHANNEL, STRINGS['NOT_STARTED'])
             return
-        if len (self.players) < 2:
-            bot.msg (CHANNEL, STRINGS['NOT_ENOUGH'])
+        if len(self.players) < 2:
+            bot.msg(CHANNEL, STRINGS['NOT_ENOUGH'])
             return
         if input.nick != self.game_on:
-            bot.msg (CHANNEL, STRINGS['NEEDS_TO_DEAL'] % self.game_on)
+            bot.msg(CHANNEL, STRINGS['NEEDS_TO_DEAL'] % self.game_on)
             return
-        if len (self.deck):
-            bot.msg (CHANNEL, STRINGS['ALREADY_DEALT'])
+        if len(self.deck):
+            bot.msg(CHANNEL, STRINGS['ALREADY_DEALT'])
             return
-        self.startTime = datetime.now ()
-        self.deck = self.createnewdeck ()
-        for i in xrange (0, 7):
+        self.startTime = datetime.now()
+        self.deck = self.createnewdeck()
+        for i in xrange(0, 7):
             for p in self.players:
-                self.players[p].append (self.getCard ())
-        self.topCard = self.getCard ()
-        while self.topCard in ['W', 'WD4']: self.topCard = self.getCard ()
+                self.players[p].append(self.getCard())
+        self.topCard = self.getCard()
+        while self.topCard in ['W', 'WD4']:
+            self.topCard = self.getCard()
         self.currentPlayer = 1
-        self.cardPlayed (bot, self.topCard)
-        self.showOnTurn (bot)
-    
-    def play (self, bot, input):
+        self.cardPlayed(bot, self.topCard)
+        self.showOnTurn(bot)
+
+    def play(self, bot, input):
         if not self.game_on or not self.deck:
             return
         if input.nick != self.playerOrder[self.currentPlayer]:
-            bot.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            bot.msg(CHANNEL,
+                    STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
-        tok = [z.strip () for z in str (input).upper ().split (' ')]
-        if len (tok) != 3:
+        tok = [z.strip() for z in str(input).upper().split(' ')]
+        if len(tok) != 3:
             return
         searchcard = ''
         if tok[1] in self.special_cards:
             searchcard = tok[1]
-        else: searchcard = (tok[1] + tok[2])
-        if searchcard not in self.players[self.playerOrder[self.currentPlayer]]:
-            bot.msg (CHANNEL, STRINGS['DONT_HAVE'] % self.playerOrder[self.currentPlayer])
+        else:
+            searchcard = (tok[1] + tok[2])
+        if searchcard not in self.players[self.playerOrder[self.currentPlayer]
+                                          ]:
+            bot.msg(CHANNEL, STRINGS['DONT_HAVE'] %
+                    self.playerOrder[self.currentPlayer])
             return
         playcard = (tok[1] + tok[2])
-        if not self.cardPlayable (playcard):
-            bot.msg (CHANNEL, STRINGS['DOESNT_PLAY'] % self.playerOrder[self.currentPlayer])
+        if not self.cardPlayable(playcard):
+            bot.msg(CHANNEL, STRINGS['DOESNT_PLAY'] %
+                    self.playerOrder[self.currentPlayer])
             return
-        
+
         self.drawn = False
-        self.players[self.playerOrder[self.currentPlayer]].remove (searchcard)
-        
+        self.players[self.playerOrder[self.currentPlayer]].remove(searchcard)
+
         pl = self.currentPlayer
-        
-        self.incPlayer ()
-        self.cardPlayed (bot, playcard)
 
-        if len (self.players[self.playerOrder[pl]]) == 1:
-            bot.msg (CHANNEL, STRINGS['UNO'] % self.playerOrder[pl])
-        elif len (self.players[self.playerOrder[pl]]) == 0:
-            bot.msg (CHANNEL, STRINGS['WIN'] % (self.playerOrder[pl], (datetime.now () - self.startTime)))
-            self.gameEnded (bot, self.playerOrder[pl])
+        self.incPlayer()
+        self.cardPlayed(bot, playcard)
+
+        if len(self.players[self.playerOrder[pl]]) == 1:
+            bot.msg(CHANNEL, STRINGS['UNO'] % self.playerOrder[pl])
+        elif len(self.players[self.playerOrder[pl]]) == 0:
+            bot.msg(CHANNEL,
+                    STRINGS['WIN'] % (self.playerOrder[pl],
+                                      (datetime.now() - self.startTime)))
+            self.gameEnded(bot, self.playerOrder[pl])
             return
-            
-        self.showOnTurn (bot)
 
-    def draw (self, bot, input):
+        self.showOnTurn(bot)
+
+    def draw(self, bot, input):
         if not self.game_on or not self.deck:
             return
         if input.nick != self.playerOrder[self.currentPlayer]:
-            bot.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            bot.msg(CHANNEL,
+                    STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
         if self.drawn:
-            bot.msg (CHANNEL, STRINGS['DRAWN_ALREADY'])
+            bot.msg(CHANNEL, STRINGS['DRAWN_ALREADY'])
             return
         self.drawn = True
-        bot.msg (CHANNEL, STRINGS['DRAWS'] % self.playerOrder[self.currentPlayer])
-        c = self.getCard ()
-        self.players[self.playerOrder[self.currentPlayer]].append (c)
-        bot.notice (input.nick, STRINGS['DRAWN_CARD'] % self.renderCards ([c]))
+        bot.msg(CHANNEL,
+                STRINGS['DRAWS'] % self.playerOrder[self.currentPlayer])
+        c = self.getCard()
+        self.players[self.playerOrder[self.currentPlayer]].append(c)
+        bot.notice(input.nick, STRINGS['DRAWN_CARD'] % self.renderCards([c]))
 
     # this is not a typo, avoiding collision with Python's pass keyword
-    def passs (self, bot, input):
+    def passs(self, bot, input):
         if not self.game_on or not self.deck:
             return
         if input.nick != self.playerOrder[self.currentPlayer]:
-            bot.msg (CHANNEL, STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            bot.msg(CHANNEL,
+                    STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
         if not self.drawn:
-            bot.msg (CHANNEL, STRINGS['DRAW_FIRST'] % self.playerOrder[self.currentPlayer])
+            bot.msg(CHANNEL, STRINGS['DRAW_FIRST'] %
+                    self.playerOrder[self.currentPlayer])
             return
         self.drawn = False
-        bot.msg (CHANNEL, STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
-        self.incPlayer ()
-        self.showOnTurn (bot)
-    
-    def top10 (self, bot):
+        bot.msg(CHANNEL,
+                STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
+        self.incPlayer()
+        self.showOnTurn(bot)
+
+    def top10(self, bot):
         from copy import copy
-        prescores = [ ]
+        prescores = []
         try:
-            f = open (self.scoreFile, 'r')
+            f = open(self.scoreFile, 'r')
             for l in f:
-                t = l.replace ('\n', '').split (' ')
-                if len (t) < 4: continue
-                prescores.append (copy (t))
-                if len (t) == 4: t.append (0)
-            f.close ()
-        except: pass
-        prescores = sorted (prescores, lambda x, y: cmp ((y[1] != '0') and (float (y[3]) / int (y[1])) or 0, (x[1] != '0') and (float (x[3]) / int (x[1])) or 0))
+                t = l.replace('\n', '').split(' ')
+                if len(t) < 4: continue
+                prescores.append(copy(t))
+                if len(t) == 4: t.append(0)
+            f.close()
+        except:
+            pass
+        prescores = sorted(prescores, lambda x, y: cmp(
+            (y[1] != '0') and (float(y[3]) / int(y[1])) or 0, (x[1] != '0') and
+            (float(x[3]) / int(x[1])) or 0))
         if not prescores:
-            bot.msg (CHANNEL, STRINGS['NO_SCORES'])
+            bot.msg(CHANNEL, STRINGS['NO_SCORES'])
         i = 1
         for z in prescores[:10]:
-            bot.msg (CHANNEL, STRINGS['SCORE_ROW'] % (i, z[0], z[3], z[1], z[2], timedelta (seconds = int (z[4]))))
+            bot.msg(CHANNEL, STRINGS['SCORE_ROW'] %
+                    (i, z[0], z[3], z[1], z[2], timedelta(seconds=int(z[4]))))
             i += 1
 
-    
-    def createnewdeck (self):
-        ret = [ ]
+    def createnewdeck(self):
+        ret = []
         for a in self.colored_card_nums:
             for b in self.colors:
-                ret.append (b + a)
+                ret.append(b + a)
         for a in self.special_cards:
-            ret.append (a)
-            ret.append (a)
-        
+            ret.append(a)
+            ret.append(a)
+
         ret *= 2
-        random.shuffle (ret)
+        random.shuffle(ret)
         return ret
-    
+
     def getCard(self):
         ret = self.deck[0]
-        self.deck.pop (0)
+        self.deck.pop(0)
         if not self.deck:
-            self.deck = self.createnewdeck ()        
+            self.deck = self.createnewdeck()
         return ret
-    
-    def showOnTurn (self, bot):
-        bot.msg (CHANNEL, STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer], self.renderCards ([self.topCard])))
-        bot.notice (self.playerOrder[self.currentPlayer], STRINGS['YOUR_CARDS'] % self.renderCards (self.players[self.playerOrder[self.currentPlayer]]))
+
+    def showOnTurn(self, bot):
+        bot.msg(CHANNEL,
+                STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer],
+                                       self.renderCards([self.topCard])))
+        bot.notice(self.playerOrder[self.currentPlayer],
+                   STRINGS['YOUR_CARDS'] % self.renderCards(
+                       self.players[self.playerOrder[self.currentPlayer]]))
         msg = STRINGS['NEXT_START']
         tmp = self.currentPlayer + self.way
-        if tmp == len (self.players):
+        if tmp == len(self.players):
             tmp = 0
         if tmp < 0:
-            tmp = len (self.players) - 1
-        arr = [ ]
+            tmp = len(self.players) - 1
+        arr = []
         while tmp != self.currentPlayer:
-            arr.append (STRINGS['NEXT_PLAYER'] % (self.playerOrder[tmp], len (self.players[self.playerOrder[tmp]])))
+            arr.append(STRINGS['NEXT_PLAYER'] % (self.playerOrder[tmp], len(
+                self.players[self.playerOrder[tmp]])))
             tmp = tmp + self.way
-            if tmp == len (self.players):
+            if tmp == len(self.players):
                 tmp = 0
             if tmp < 0:
-                tmp = len (self.players) - 1
-        msg += ' - '.join (arr)
-        bot.notice (self.playerOrder[self.currentPlayer], msg)
-        
-    def renderCards (self, cards):
-        ret = [ ]
-        for c in sorted (cards):
+                tmp = len(self.players) - 1
+        msg += ' - '.join(arr)
+        bot.notice(self.playerOrder[self.currentPlayer], msg)
+
+    def renderCards(self, cards):
+        ret = []
+        for c in sorted(cards):
             if c in ['W', 'WD4']:
-                ret.append ('\x0300,01[' + c + ']')
+                ret.append('\x0300,01[' + c + ']')
                 continue
             if c[0] == 'W':
                 c = c[-1] + '*'
@@ -297,140 +324,158 @@ class UnoBot:
             if c[0] == 'R':
                 t += '04,01['
             t += c[1:] + ']\x0300,01'
-            ret.append (t)
-        return ''.join (ret)
-    
-    def cardPlayable (self, card):
+            ret.append(t)
+        return ''.join(ret)
+
+    def cardPlayable(self, card):
         if card[0] == 'W' and card[-1] in self.colors:
             return True
         if self.topCard[0] == 'W':
             return card[0] == self.topCard[-1]
-        return ((card[0] == self.topCard[0]) or (card[1] == self.topCard[1])) and (card[0] not in ['W', 'WD4'])
-    
-    def cardPlayed (self, bot, card):
+        return ((card[0] == self.topCard[0]) or
+                (card[1] == self.topCard[1])) and (card[0] not in ['W', 'WD4'])
+
+    def cardPlayed(self, bot, card):
         if card[1:] == 'D2':
-            bot.msg (CHANNEL, STRINGS['D2'] % self.playerOrder[self.currentPlayer])
-            z = [self.getCard (), self.getCard ()]
-            bot.notice(self.playerOrder[self.currentPlayer], STRINGS['CARDS'] % self.renderCards (z))
-            self.players[self.playerOrder[self.currentPlayer]].extend (z)
-            self.incPlayer ()
+            bot.msg(CHANNEL,
+                    STRINGS['D2'] % self.playerOrder[self.currentPlayer])
+            z = [self.getCard(), self.getCard()]
+            bot.notice(self.playerOrder[self.currentPlayer],
+                       STRINGS['CARDS'] % self.renderCards(z))
+            self.players[self.playerOrder[self.currentPlayer]].extend(z)
+            self.incPlayer()
         elif card[:2] == 'WD':
-            bot.msg (CHANNEL, STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
-            z = [self.getCard (), self.getCard (), self.getCard (), self.getCard ()]
-            bot.notice(self.playerOrder[self.currentPlayer], STRINGS['CARDS'] % self.renderCards (z))
-            self.players[self.playerOrder[self.currentPlayer]].extend (z)
-            self.incPlayer ()
+            bot.msg(CHANNEL,
+                    STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
+            z = [self.getCard(), self.getCard(), self.getCard(),
+                 self.getCard()]
+            bot.notice(self.playerOrder[self.currentPlayer],
+                       STRINGS['CARDS'] % self.renderCards(z))
+            self.players[self.playerOrder[self.currentPlayer]].extend(z)
+            self.incPlayer()
         elif card[1] == 'S':
-            bot.msg (CHANNEL, STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
-            self.incPlayer ()
+            bot.msg(CHANNEL,
+                    STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
+            self.incPlayer()
         elif card[1] == 'R' and card[0] != 'W':
-            bot.msg (CHANNEL, STRINGS['REVERSED'])
+            bot.msg(CHANNEL, STRINGS['REVERSED'])
             self.way = -self.way
-            self.incPlayer ()
-            self.incPlayer ()
+            self.incPlayer()
+            self.incPlayer()
         self.topCard = card
-    
-    def gameEnded (self, bot, winner):
+
+    def gameEnded(self, bot, winner):
         try:
             score = 0
             for p in self.players:
                 for c in self.players[p]:
                     if c[0] == 'W':
                         score += self.special_scores[c]
-                    elif c[1] in [ 'S', 'R', 'D' ]:
+                    elif c[1] in ['S', 'R', 'D']:
                         score += self.special_scores[c[1:]]
                     else:
-                        score += int (c[1])
-            bot.msg (CHANNEL, STRINGS['GAINS'] % (winner, score))
-            self.saveScores (self.players.keys (), winner, score, (datetime.now () - self.startTime).seconds)
+                        score += int(c[1])
+            bot.msg(CHANNEL, STRINGS['GAINS'] % (winner, score))
+            self.saveScores(self.players.keys(), winner, score,
+                            (datetime.now() - self.startTime).seconds)
         except Exception, e:
             print 'Score error: %s' % e
-        self.players = { }
-        self.playerOrder = [ ]
+        self.players = {}
+        self.playerOrder = []
         self.game_on = False
         self.currentPlayer = 0
         self.topCard = None
         self.way = 1
-        
-    
-    def incPlayer (self):
+
+    def incPlayer(self):
         self.currentPlayer = self.currentPlayer + self.way
-        if self.currentPlayer == len (self.players):
+        if self.currentPlayer == len(self.players):
             self.currentPlayer = 0
         if self.currentPlayer < 0:
-            self.currentPlayer = len (self.players) - 1
-    
-    def saveScores (self, players, winner, score, time):
+            self.currentPlayer = len(self.players) - 1
+
+    def saveScores(self, players, winner, score, time):
         from copy import copy
-        prescores = { }
+        prescores = {}
         try:
-            f = open (self.scoreFile, 'r')
+            f = open(self.scoreFile, 'r')
             for l in f:
-                t = l.replace ('\n', '').split (' ')
-                if len (t) < 4: continue
-                if len (t) == 4: t.append (0)
-                prescores[t[0]] = [t[0], int (t[1]), int (t[2]), int (t[3]), int (t[4])]
-            f.close ()
-        except: pass
+                t = l.replace('\n', '').split(' ')
+                if len(t) < 4: continue
+                if len(t) == 4: t.append(0)
+                prescores[t[0]] = [t[0], int(t[1]), int(t[2]), int(t[3]),
+                                   int(t[4])]
+            f.close()
+        except:
+            pass
         for p in players:
             if p not in prescores:
-                prescores[p] = [ p, 0, 0, 0, 0 ]
+                prescores[p] = [p, 0, 0, 0, 0]
             prescores[p][1] += 1
             prescores[p][4] += time
         prescores[winner][2] += 1
         prescores[winner][3] += score
         try:
-            f = open (self.scoreFile, 'w')
+            f = open(self.scoreFile, 'w')
             for p in prescores:
-                f.write (' '.join ([str (s) for s in prescores[p]]) + '\n')
-            f.close ()
+                f.write(' '.join([str(s) for s in prescores[p]]) + '\n')
+            f.close()
         except Exception, e:
             print 'Failed to write score file %s' % e
 
-unobot = UnoBot ()
+
+unobot = UnoBot()
+
 
 @module.commands('uno')
 @module.example('.uno')
 @module.priority('high')
 def uno(bot, trigger):
-    unobot.start (bot, trigger.nick)
+    unobot.start(bot, trigger.nick)
+
 
 @module.commands('unostop')
 @module.example('.unostop')
 @module.priority('high')
 def unostop(bot, trigger):
-    unobot.stop (bot, trigger)
+    unobot.stop(bot, trigger)
+
 
 @module.rule('^join$')
 @module.priority('high')
 def join(bot, trigger):
-    unobot.join (bot, trigger)
+    unobot.join(bot, trigger)
+
 
 @module.commands('deal')
 @module.priority('high')
 def deal(bot, trigger):
-    unobot.deal (bot, trigger)
+    unobot.deal(bot, trigger)
+
 
 @module.commands('play')
 @module.priority('high')
 def play(bot, trigger):
-    unobot.play (bot, trigger)
+    unobot.play(bot, trigger)
+
 
 @module.commands('draw')
 @module.priority('high')
 def draw(bot, trigger):
-    unobot.draw (bot, trigger)
+    unobot.draw(bot, trigger)
+
 
 @module.commands('pass')
 @module.priority('high')
 def passs(bot, trigger):
-    unobot.passs (bot, trigger)
+    unobot.passs(bot, trigger)
+
 
 @module.commands('unotop10')
 @module.priority('high')
-def unotop10 (bot, trigger):
-    unobot.top10 (bot)
+def unotop10(bot, trigger):
+    unobot.top10(bot)
+
 
 if __name__ == '__main__':
-       print __doc__.strip()
-
+    print __doc__.strip()
