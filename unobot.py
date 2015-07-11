@@ -103,43 +103,43 @@ class UnoBot:
             self.players[owner] = []
             self.playerOrder = [owner]
 
-    def stop(self, bot, input):
-        if input.nick == self.game_on:
+    def stop(self, bot, trigger):
+        if trigger.nick == self.game_on:
             bot.msg(CHANNEL, STRINGS['GAME_STOPPED'])
             self.game_on = False
         elif self.game_on:
             bot.msg(CHANNEL, STRINGS['CANT_STOP'] % self.game_on)
 
-    def join(self, bot, input):
+    def join(self, bot, trigger):
         #print dir (bot.bot)
-        #print dir (input)
+        #print dir (trigger)
         if self.game_on:
-            if input.nick not in self.players:
-                self.players[input.nick] = []
-                self.playerOrder.append(input.nick)
+            if trigger.nick not in self.players:
+                self.players[trigger.nick] = []
+                self.playerOrder.append(trigger.nick)
                 if self.deck:
                     for i in xrange(0, 7):
-                        self.players[input.nick].append(self.getCard())
+                        self.players[trigger.nick].append(self.getCard())
                     bot.msg(CHANNEL, STRINGS['DEALING_IN'] % (
-                        input.nick, self.playerOrder.index(input.nick) + 1
+                        trigger.nick, self.playerOrder.index(trigger.nick) + 1
                     ))
                 else:
                     bot.msg(CHANNEL, STRINGS['JOINED'] % (
-                        input.nick, self.playerOrder.index(input.nick) + 1
+                        trigger.nick, self.playerOrder.index(trigger.nick) + 1
                     ))
                     if len(self.players) > 1:
                         bot.msg(CHANNEL, STRINGS['ENOUGH'])
         else:
             bot.msg(CHANNEL, STRINGS['NOT_STARTED'])
 
-    def deal(self, bot, input):
+    def deal(self, bot, trigger):
         if not self.game_on:
             bot.msg(CHANNEL, STRINGS['NOT_STARTED'])
             return
         if len(self.players) < 2:
             bot.msg(CHANNEL, STRINGS['NOT_ENOUGH'])
             return
-        if input.nick != self.game_on:
+        if trigger.nick != self.game_on:
             bot.msg(CHANNEL, STRINGS['NEEDS_TO_DEAL'] % self.game_on)
             return
         if len(self.deck):
@@ -157,14 +157,14 @@ class UnoBot:
         self.cardPlayed(bot, self.topCard)
         self.showOnTurn(bot)
 
-    def play(self, bot, input):
+    def play(self, bot, trigger):
         if not self.game_on or not self.deck:
             return
-        if input.nick != self.playerOrder[self.currentPlayer]:
+        if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.msg(CHANNEL,
                     STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
-        tok = [z.strip() for z in str(input).upper().split(' ')]
+        tok = [z.strip() for z in str(trigger).upper().split(' ')]
         if len(tok) != 3:
             return
         searchcard = ''
@@ -202,10 +202,10 @@ class UnoBot:
 
         self.showOnTurn(bot)
 
-    def draw(self, bot, input):
+    def draw(self, bot, trigger):
         if not self.game_on or not self.deck:
             return
-        if input.nick != self.playerOrder[self.currentPlayer]:
+        if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.msg(CHANNEL,
                     STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
@@ -217,13 +217,13 @@ class UnoBot:
                 STRINGS['DRAWS'] % self.playerOrder[self.currentPlayer])
         c = self.getCard()
         self.players[self.playerOrder[self.currentPlayer]].append(c)
-        bot.notice(input.nick, STRINGS['DRAWN_CARD'] % self.renderCards([c]))
+        bot.notice(trigger.nick, STRINGS['DRAWN_CARD'] % self.renderCards([c]))
 
     # this is not a typo, avoiding collision with Python's pass keyword
-    def passs(self, bot, input):
+    def passs(self, bot, trigger):
         if not self.game_on or not self.deck:
             return
-        if input.nick != self.playerOrder[self.currentPlayer]:
+        if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.msg(CHANNEL,
                     STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
