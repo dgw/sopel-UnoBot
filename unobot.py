@@ -217,7 +217,7 @@ class UnoBot:
                 STRINGS['DRAWS'] % self.playerOrder[self.currentPlayer])
         c = self.getCard()
         self.players[self.playerOrder[self.currentPlayer]].append(c)
-        bot.notice(trigger.nick, STRINGS['DRAWN_CARD'] % self.renderCards([c]))
+        bot.notice(STRINGS['DRAWN_CARD'] % self.renderCards([c]), trigger.nick)
 
     # this is not a typo, avoiding collision with Python's pass keyword
     def passs(self, bot, trigger):
@@ -285,9 +285,9 @@ class UnoBot:
         bot.msg(CHANNEL,
                 STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer],
                                        self.renderCards([self.topCard])))
-        bot.notice(self.playerOrder[self.currentPlayer],
-                   STRINGS['YOUR_CARDS'] % self.renderCards(
-                       self.players[self.playerOrder[self.currentPlayer]]))
+        bot.notice(STRINGS['YOUR_CARDS'] % self.renderCards(
+            self.players[self.playerOrder[self.currentPlayer]]),
+                   self.playerOrder[self.currentPlayer])
         msg = STRINGS['NEXT_START']
         tmp = self.currentPlayer + self.way
         if tmp == len(self.players):
@@ -304,7 +304,7 @@ class UnoBot:
             if tmp < 0:
                 tmp = len(self.players) - 1
         msg += ' - '.join(arr)
-        bot.notice(self.playerOrder[self.currentPlayer], msg)
+        bot.notice(msg, self.playerOrder[self.currentPlayer])
 
     def renderCards(self, cards):
         ret = []
@@ -340,8 +340,8 @@ class UnoBot:
             bot.msg(CHANNEL,
                     STRINGS['D2'] % self.playerOrder[self.currentPlayer])
             z = [self.getCard(), self.getCard()]
-            bot.notice(self.playerOrder[self.currentPlayer],
-                       STRINGS['CARDS'] % self.renderCards(z))
+            bot.notice(STRINGS['CARDS'] % self.renderCards(z),
+                       self.playerOrder[self.currentPlayer])
             self.players[self.playerOrder[self.currentPlayer]].extend(z)
             self.incPlayer()
         elif card[:2] == 'WD':
@@ -349,8 +349,8 @@ class UnoBot:
                     STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
             z = [self.getCard(), self.getCard(), self.getCard(),
                  self.getCard()]
-            bot.notice(self.playerOrder[self.currentPlayer],
-                       STRINGS['CARDS'] % self.renderCards(z))
+            bot.notice(STRINGS['CARDS'] % self.renderCards(z),
+                       self.playerOrder[self.currentPlayer])
             self.players[self.playerOrder[self.currentPlayer]].extend(z)
             self.incPlayer()
         elif card[1] == 'S':
