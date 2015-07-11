@@ -127,7 +127,7 @@ class UnoBot:
                         trigger.nick, self.playerOrder.index(trigger.nick) + 1
                     ))
                     if len(self.players) > 1:
-                        bot.msg(CHANNEL, STRINGS['ENOUGH'])
+                        bot.notice(STRINGS['ENOUGH'], self.game_on)
         else:
             bot.msg(CHANNEL, STRINGS['NOT_STARTED'])
 
