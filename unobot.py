@@ -61,7 +61,7 @@ STRINGS = {
     'NO_SCORES'      : 'No scores yet',
     'SCORE_ROW'      : '#%s %s (%s points %s games, %s won, %s wasted)',
     'TOP_CARD'       : '%s\'s turn. Top Card: %s',
-    'YOUR_CARDS'     : 'Your cards: %s',
+    'YOUR_CARDS'     : 'Your cards (%d): %s',
     'NEXT_START'     : 'Next: ',
     'NEXT_PLAYER'    : '%s (%s cards)',
     'D2'             : '%s draws two and is skipped!',
@@ -199,8 +199,8 @@ class UnoGame:
     def showOnTurn(self, bot):
         bot.say(STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer],
                                        self.renderCards([self.topCard])))
-        bot.notice(STRINGS['YOUR_CARDS'] % self.renderCards(
-            self.players[self.playerOrder[self.currentPlayer]]),
+        cards = self.players[self.playerOrder[self.currentPlayer]]
+        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.renderCards(cards)),
                    self.playerOrder[self.currentPlayer])
         msg = STRINGS['NEXT_START']
         tmp = self.currentPlayer + self.way
