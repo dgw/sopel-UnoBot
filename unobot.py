@@ -32,7 +32,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import willie.module as module
-import random
+import json, random
 from datetime import datetime, timedelta
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
@@ -366,27 +366,19 @@ class UnoBot:
         game.passs(bot, trigger)
 
     def top10(self, bot):
-        from copy import copy
-        prescores = []
-        try:
-            f = open(self.scoreFile, 'r')
-            for l in f:
-                t = l.replace('\n', '').split(' ')
-                if len(t) < 4: continue
-                prescores.append(copy(t))
-                if len(t) == 4: t.append(0)
-            f.close()
-        except:
-            pass
-        prescores = sorted(prescores, lambda x, y: cmp(
-            (y[1] != '0') and (float(y[3]) / int(y[1])) or 0, (x[1] != '0') and
-            (float(x[3]) / int(x[1])) or 0))
-        if not prescores:
+        scores = self.getScores(bot)
+        if not scores:
             bot.say(STRINGS['NO_SCORES'])
+            return
+        order = sorted(scores.keys(), key=lambda k: scores[k]['points'], reverse=True)
         i = 1
-        for z in prescores[:10]:
+        for player in order[:10]:
+            if not scores[player]['points']:
+                # nobody else has any points; stop printing
+                break
             bot.say(STRINGS['SCORE_ROW'] %
-                    (i, z[0], z[3], z[1], z[2], timedelta(seconds=int(z[4]))))
+                    (i, player, scores[player]['points'], scores[player]['games'], scores[player]['wins'],
+                     timedelta(seconds=int(scores[player]['playtime']))))
             i += 1
 
     def gameEnded(self, bot, trigger, winner):
@@ -402,39 +394,73 @@ class UnoBot:
                     else:
                         score += int(c[1])
             bot.say(STRINGS['GAINS'] % (winner, score))
-            self.saveScores(game.players.keys(), winner, score,
-                            (datetime.now() - game.startTime).seconds)
+            self.updateScores(bot, game.players.keys(), winner, score,
+                              (datetime.now() - game.startTime).seconds)
         except Exception, e:
             print 'Score error: %s' % e
         del self.games[trigger.sender]
 
-    def saveScores(self, players, winner, score, time):
-        prescores = {}
+    def updateScores(self, bot, players, winner, score, time):
+        scores = self.getScores(bot)
+        for pl in players:
+            if pl not in scores:
+                scores[pl] = {'games': 0, 'wins': 0, 'points': 0, 'playtime': 0}
+            scores[pl]['games'] += 1
+            scores[pl]['playtime'] += time
+        scores[winner]['wins'] += 1
+        scores[winner]['points'] += score
         try:
-            f = open(self.scoreFile, 'r')
-            for l in f:
-                t = l.replace('\n', '').split(' ')
-                if len(t) < 4: continue
-                if len(t) == 4: t.append(0)
-                prescores[t[0]] = [t[0], int(t[1]), int(t[2]), int(t[3]),
-                                   int(t[4])]
-            f.close()
-        except:
-            pass
-        for p in players:
-            if p not in prescores:
-                prescores[p] = [p, 0, 0, 0, 0]
-            prescores[p][1] += 1
-            prescores[p][4] += time
-        prescores[winner][2] += 1
-        prescores[winner][3] += score
-        try:
-            f = open(self.scoreFile, 'w')
-            for p in prescores:
-                f.write(' '.join([str(s) for s in prescores[p]]) + '\n')
-            f.close()
+            scorefile = open(self.scoreFile, 'w')
+            json.dump(scores, scorefile)
         except Exception, e:
-            print 'Failed to write score file %s' % e
+            bot.say('Error saving UNO score file: %s' % e)
+
+    def getScores(self, bot):
+        try:
+            scores = self.loadScores()
+        except ValueError:
+            try:
+                self.convertScorefile(bot)
+                scores = self.loadScores()
+            except ValueError:
+                bot.say('Something has gone horribly wrong with the UNO scores.')
+        return scores or {}
+
+    def loadScores(self):
+        scorefile = open(self.scoreFile, 'r')
+        scores = json.load(scorefile)
+        scorefile.close()
+        return scores or {}
+
+    def convertScorefile(self, bot):
+        scores = {}
+        try:
+            scorefile = open(self.scoreFile, 'r')
+            for line in scorefile:
+                tokens = line.replace('\n', '').split(' ')
+                if len(tokens) < 4: continue
+                if len(tokens) == 4: tokens.append(0)
+                scores[tokens[0]] = {
+                    'games'   : int(tokens[1]),
+                    'wins'    : int(tokens[2]),
+                    'points'  : int(tokens[3]),
+                    'playtime': int(tokens[4]),
+                }
+            scorefile.close()
+        except Exception, e:
+            bot.say('Score conversion error: %s' % e)
+            pass
+        else:
+            bot.say('Converted UNO score file to new JSON format.')
+        try:
+            scorefile = open(self.scoreFile, 'w')
+            json.dump(scores, scorefile)
+            scorefile.close()
+        except Exception, e:
+            bot.say('Error converting UNO score file: %s' % e)
+            pass
+        else:
+            bot.say('Wrote UNO score file in new JSON format.')
 
 
 unobot = UnoBot()
