@@ -111,7 +111,7 @@ class UnoGame:
         if len(self.players) < 2:
             bot.say(STRINGS['NOT_ENOUGH'])
             return
-        if trigger.nick != self.owner:
+        if trigger.nick != self.owner and not trigger.admin:
             bot.say(STRINGS['NEEDS_TO_DEAL'] % self.owner)
             return
         if len(self.deck):
@@ -319,7 +319,7 @@ class UnoBot:
     def stop(self, bot, trigger):
         if trigger.sender in self.games:
             game = self.games[trigger.sender]
-            if trigger.nick == game.owner:
+            if trigger.nick == game.owner or trigger.admin:
                 bot.say(STRINGS['GAME_STOPPED'])
                 del self.games[trigger.sender]
             else:
