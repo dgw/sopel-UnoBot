@@ -534,6 +534,23 @@ def passs(bot, trigger):
     unobot.passs(bot, trigger)
 
 
+@module.commands('unohelp')
+@module.example('.unohelp')
+@module.priority('high')
+def unohelp(bot, trigger):
+    p = bot.config.core.help_prefix
+    r = trigger.nick
+    bot.reply('I am sending you UNO help privately. If you do not see it, configure your client to show '
+              'non-server notices in the current channel. Cards are sent the same way during game-play.')
+    bot.notice('UNO is played using the %splay, %sdraw, and %spass commands.' % (p, p, p), r)
+    bot.notice('To play a card, say %splay c f (where c = r/g/b/y and f = the card\'s face value).'
+               ' e.g. %splay r 2 to play a red 2 or %splay b d2 to play a blue D2.' % (p, p, p), r)
+    bot.notice('Wild (W) and Wild Draw 4 (WD4) cards are played as %splay w[d4] c'
+               ' (where c = the color you wish to change the discard pile to).' % p, r)
+    bot.notice('If you cannot play a card on your turn, you must %sdraw. If that card is not playable, '
+               'you must %spass (forfeiting your turn).' % (p, p), r)
+
+
 @module.commands('unotop')
 @module.example('.unotop')
 @module.priority('high')
