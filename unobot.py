@@ -570,6 +570,9 @@ def cards(bot, trigger):
 @module.priority('high')
 @module.require_chanmsg()
 def counts(bot, trigger):
+    """
+    Sends current UNO card counts to the channel, if a game is in progress.
+    """
     unobot.sendCounts(bot, trigger)
 
 
@@ -577,6 +580,9 @@ def counts(bot, trigger):
 @module.example('.unohelp')
 @module.priority('high')
 def unohelp(bot, trigger):
+    """
+    Shows some basic help for UNO game-play.
+    """
     p = bot.config.core.help_prefix
     r = trigger.nick
     bot.reply('I am sending you UNO help privately. If you do not see it, configure your client to show '
