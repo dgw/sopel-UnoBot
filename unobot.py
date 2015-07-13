@@ -63,6 +63,7 @@ STRINGS = {
     'SCORE_ROW'      : '#%s %s (%s points %s games, %s won, %s wasted)',
     'TOP_CARD'       : '%s\'s turn. Top Card: %s',
     'YOUR_CARDS'     : 'Your cards (%d): %s',
+    'NEXT_START'     : 'Next: ',
     'SB_START'       : 'Standings: ',
     'SB_PLAYER'      : '%s (%s cards)',
     'D2'             : '%s draws two and is skipped!',
@@ -198,18 +199,25 @@ class UnoGame:
         self.showOnTurn(bot)
 
     def showOnTurn(self, bot):
-        bot.say(STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer],
-                                       self.renderCards([self.topCard])))
+        pl = self.playerOrder[self.currentPlayer]
+        bot.say(STRINGS['TOP_CARD'] % (pl, self.renderCards([self.topCard])))
         self.sendCards(bot, self.playerOrder[self.currentPlayer])
-        self.sendScoreboard(bot)
+        self.sendNext(bot)
 
     def sendCards(self, bot, who):
         cards = self.players[who]
         bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.renderCards(cards)), who)
 
-    def sendScoreboard(self, bot):
-        msg = STRINGS['SB_START']
+    def sendNext(self, bot):
+        bot.notice(STRINGS['NEXT_START'] + self.renderCounts(), self.playerOrder[self.currentPlayer])
+
+    def sendCounts(self, bot):
+        bot.say(STRINGS['SB_START'] + self.renderCounts(True))
+
+    def renderCounts(self, include_current=False):
         tmp = self.currentPlayer
+        if not include_current:
+            tmp += self.way
         arr = []
         while True:
             arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[tmp], len(
@@ -221,8 +229,7 @@ class UnoGame:
                 tmp = len(self.players) - 1
             if tmp == self.currentPlayer:
                 break
-        msg += ' - '.join(arr)
-        bot.say(msg)
+        return ' - '.join(arr)
 
     def renderCards(self, cards):
         ret = []
@@ -375,6 +382,12 @@ class UnoBot:
             return
         game = self.games[trigger.sender]
         game.sendCards(bot, trigger.nick)
+
+    def sendCounts(self, bot, trigger):
+        if trigger.sender not in self.games:
+            return
+        game = self.games[trigger.sender]
+        game.sendCounts(bot)
 
     def topscores(self, bot):
         scores = self.getScores(bot)
@@ -548,6 +561,14 @@ def passs(bot, trigger):
 @module.priority('high')
 def cards(bot, trigger):
     unobot.sendCards(bot, trigger)
+
+
+@module.commands('counts')
+@module.example('.counts')
+@module.priority('high')
+@module.require_chanmsg()
+def counts(bot, trigger):
+    unobot.sendCounts(bot, trigger)
 
 
 @module.commands('unohelp')
