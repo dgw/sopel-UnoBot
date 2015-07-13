@@ -32,6 +32,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import willie.module as module
+import willie.tools as tools
 import json, random
 from datetime import datetime, timedelta
 
@@ -345,12 +346,13 @@ class UnoBot:
         game = self.games[trigger.sender]
         winner = game.currentPlayer
         if game.play(bot, trigger) == 'WIN':
+            winner = game.playerOrder[winner]
             game_duration = datetime.now() - game.startTime
             hours, remainder = divmod(game_duration.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             game_duration = '%.2d:%.2d:%.2d' % (hours, minutes, seconds)
-            bot.say(STRINGS['WIN'] % (game.playerOrder[winner], game_duration))
-            self.gameEnded(bot, trigger, game.playerOrder[winner])
+            bot.say(STRINGS['WIN'] % (winner, game_duration))
+            self.gameEnded(bot, trigger, winner)
 
     def draw(self, bot, trigger):
         if trigger.sender not in self.games:
@@ -401,8 +403,15 @@ class UnoBot:
         del self.games[trigger.sender]
 
     def updateScores(self, bot, players, winner, score, time):
+        import sys
+        if sys.version_info.major < 3:
+            string = unicode
+        else:
+            string = str
         scores = self.getScores(bot)
+        winner = string(winner)
         for pl in players:
+            pl = string(pl)
             if pl not in scores:
                 scores[pl] = {'games': 0, 'wins': 0, 'points': 0, 'playtime': 0}
             scores[pl]['games'] += 1
@@ -416,6 +425,7 @@ class UnoBot:
             bot.say('Error saving UNO score file: %s' % e)
 
     def getScores(self, bot):
+        scores = {}
         try:
             scores = self.loadScores()
         except ValueError:
@@ -424,7 +434,7 @@ class UnoBot:
                 scores = self.loadScores()
             except ValueError:
                 bot.say('Something has gone horribly wrong with the UNO scores.')
-        return scores or {}
+        return scores
 
     def loadScores(self):
         scorefile = open(self.scoreFile, 'r')
@@ -440,7 +450,7 @@ class UnoBot:
                 tokens = line.replace('\n', '').split(' ')
                 if len(tokens) < 4: continue
                 if len(tokens) == 4: tokens.append(0)
-                scores[tokens[0]] = {
+                scores[tools.Identifier(tokens[0])] = {
                     'games'   : int(tokens[1]),
                     'wins'    : int(tokens[2]),
                     'points'  : int(tokens[3]),
