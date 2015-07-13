@@ -63,8 +63,8 @@ STRINGS = {
     'SCORE_ROW'      : '#%s %s (%s points %s games, %s won, %s wasted)',
     'TOP_CARD'       : '%s\'s turn. Top Card: %s',
     'YOUR_CARDS'     : 'Your cards (%d): %s',
-    'NEXT_START'     : 'Next: ',
-    'NEXT_PLAYER'    : '%s (%s cards)',
+    'SB_START'       : 'Standings: ',
+    'SB_PLAYER'      : '%s (%s cards)',
     'D2'             : '%s draws two and is skipped!',
     'CARDS'          : 'Cards: %s',
     'WD4'            : '%s draws four and is skipped!',
@@ -208,23 +208,21 @@ class UnoGame:
         bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.renderCards(cards)), who)
 
     def sendScoreboard(self, bot):
-        msg = STRINGS['NEXT_START']
-        tmp = self.currentPlayer + self.way
-        if tmp == len(self.players):
-            tmp = 0
-        if tmp < 0:
-            tmp = len(self.players) - 1
+        msg = STRINGS['SB_START']
+        tmp = self.currentPlayer
         arr = []
-        while tmp != self.currentPlayer:
-            arr.append(STRINGS['NEXT_PLAYER'] % (self.playerOrder[tmp], len(
+        while True:
+            arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[tmp], len(
                 self.players[self.playerOrder[tmp]])))
             tmp += self.way
             if tmp == len(self.players):
                 tmp = 0
             if tmp < 0:
                 tmp = len(self.players) - 1
+            if tmp == self.currentPlayer:
+                break
         msg += ' - '.join(arr)
-        bot.notice(msg, self.playerOrder[self.currentPlayer])
+        bot.say(msg)
 
     def renderCards(self, cards):
         ret = []
