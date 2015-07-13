@@ -38,6 +38,8 @@ from datetime import datetime, timedelta
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
 
+YES = True
+NO = False
 STRINGS = {
     'ALREADY_STARTED': 'Game already started by %s! Type join to join!',
     'GAME_STARTED'   : 'IRC-UNO started by %s - Type join to join!',
@@ -88,7 +90,7 @@ class UnoGame:
         self.currentPlayer = 0
         self.topCard = None
         self.way = 1
-        self.drawn = False
+        self.drawn = NO
         self.deck = []
         self.startTime = None
 
@@ -152,7 +154,7 @@ class UnoGame:
             bot.notice(STRINGS['DOESNT_PLAY'],
                        self.playerOrder[self.currentPlayer])
             return
-        self.drawn = False
+        self.drawn = NO
         self.players[self.playerOrder[self.currentPlayer]].remove(searchcard)
 
         pl = self.currentPlayer
@@ -177,7 +179,7 @@ class UnoGame:
             bot.notice(STRINGS['DRAWN_ALREADY'],
                        self.playerOrder[self.currentPlayer])
             return
-        self.drawn = True
+        self.drawn = YES
         c = self.getCard()
         self.players[self.playerOrder[self.currentPlayer]].append(c)
         bot.notice(STRINGS['DRAWN_CARD'] % self.renderCards([c]), trigger.nick)
@@ -193,7 +195,7 @@ class UnoGame:
             bot.notice(STRINGS['DRAW_FIRST'],
                        self.playerOrder[self.currentPlayer])
             return
-        self.drawn = False
+        self.drawn = NO
         bot.say(STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
         self.incPlayer()
         self.showOnTurn(bot)
@@ -212,9 +214,9 @@ class UnoGame:
         bot.notice(STRINGS['NEXT_START'] + self.renderCounts(), self.playerOrder[self.currentPlayer])
 
     def sendCounts(self, bot):
-        bot.say(STRINGS['SB_START'] + self.renderCounts(True))
+        bot.say(STRINGS['SB_START'] + self.renderCounts(YES))
 
-    def renderCounts(self, include_current=False):
+    def renderCounts(self, include_current=NO):
         tmp = self.currentPlayer
         if not include_current:
             tmp += self.way
@@ -394,7 +396,7 @@ class UnoBot:
         if not scores:
             bot.say(STRINGS['NO_SCORES'])
             return
-        order = sorted(scores.keys(), key=lambda k: scores[k]['points'], reverse=True)
+        order = sorted(scores.keys(), key=lambda k: scores[k]['points'], reverse=YES)
         i = 1
         for player in order[:5]:
             if not scores[player]['points']:
