@@ -367,14 +367,14 @@ class UnoBot:
         game = self.games[trigger.sender]
         game.passs(bot, trigger)
 
-    def top10(self, bot):
+    def topscores(self, bot):
         scores = self.getScores(bot)
         if not scores:
             bot.say(STRINGS['NO_SCORES'])
             return
         order = sorted(scores.keys(), key=lambda k: scores[k]['points'], reverse=True)
         i = 1
-        for player in order[:10]:
+        for player in order[:5]:
             if not scores[player]['points']:
                 # nobody else has any points; stop printing
                 break
@@ -521,10 +521,10 @@ def passs(bot, trigger):
     unobot.passs(bot, trigger)
 
 
-@module.commands('unotop10')
+@module.commands('unotop')
 @module.priority('high')
-def unotop10(bot, trigger):
-    unobot.top10(bot)
+def unotop(bot, trigger):
+    unobot.topscores(bot)
 
 
 if __name__ == '__main__':
