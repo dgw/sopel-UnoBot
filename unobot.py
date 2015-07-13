@@ -139,17 +139,20 @@ class UnoGame:
         if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
-        tok = [z.strip() for z in str(trigger).upper().split(' ')]
-        if len(tok) != 3:
-            return
-        if tok[1] in SPECIAL_CARDS:
-            searchcard = tok[1]
+        color = trigger.group(3).upper()
+        if color in CARD_COLORS:
+            card = trigger.group(4).upper()
+            searchcard = color + card
+        elif color in SPECIAL_CARDS:
+            card = color
+            color = trigger.group(4).upper()
+            searchcard = card
         else:
-            searchcard = (tok[1] + tok[2])
+            return
         if searchcard not in self.players[self.playerOrder[self.currentPlayer]]:
             bot.notice(STRINGS['DONT_HAVE'], self.playerOrder[self.currentPlayer])
             return
-        playcard = (tok[1] + tok[2])
+        playcard = color + card
         if not self.cardPlayable(playcard):
             bot.notice(STRINGS['DOESNT_PLAY'],
                        self.playerOrder[self.currentPlayer])
@@ -246,8 +249,8 @@ class UnoGame:
             if c in ['W', 'WD4']:
                 ret.append('\x0301[' + c + ']')
                 continue
-            if c[0] == 'W':
-                c = c[-1] + '*'
+            if 'W' in c:
+                c = c[0] + '*'
             t = '\x0300\x03'
             if c[0] == 'B':
                 t += '12['
@@ -262,22 +265,22 @@ class UnoGame:
         return ''.join(ret)
 
     def cardPlayable(self, card):
-        if card[0] == 'W' and card[-1] in CARD_COLORS:
+        if 'W' in card and card[0] in CARD_COLORS:
             return True
-        if self.topCard[0] == 'W':
-            return card[0] == self.topCard[-1]
+        if 'W' in self.topCard:
+            return card[0] == self.topCard[0]
         return ((card[0] == self.topCard[0]) or
-                (card[1] == self.topCard[1])) and (card[0] not in ['W', 'WD4'])
+                (card[1] == self.topCard[1])) and ('W' not in card)
 
     def cardPlayed(self, bot, card):
-        if card[1:] == 'D2':
+        if 'D2' in card:
             bot.say(STRINGS['D2'] % self.playerOrder[self.currentPlayer])
             z = [self.getCard(), self.getCard()]
             bot.notice(STRINGS['CARDS'] % self.renderCards(z),
                        self.playerOrder[self.currentPlayer])
             self.players[self.playerOrder[self.currentPlayer]].extend(z)
             self.incPlayer()
-        elif card[:2] == 'WD':
+        elif 'WD4' in card:
             bot.say(STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
             z = [self.getCard(), self.getCard(), self.getCard(),
                  self.getCard()]
@@ -285,10 +288,10 @@ class UnoGame:
                        self.playerOrder[self.currentPlayer])
             self.players[self.playerOrder[self.currentPlayer]].extend(z)
             self.incPlayer()
-        elif card[1] == 'S':
+        elif 'S' in card:
             bot.say(STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
             self.incPlayer()
-        elif card[1] == 'R' and card[0] != 'W':
+        elif card[1] == 'R' and 'W' not in card:
             bot.say(STRINGS['REVERSED'])
             self.way = -self.way
             self.incPlayer()
