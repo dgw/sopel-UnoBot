@@ -200,9 +200,7 @@ class UnoGame:
     def showOnTurn(self, bot):
         bot.say(STRINGS['TOP_CARD'] % (self.playerOrder[self.currentPlayer],
                                        self.renderCards([self.topCard])))
-        cards = self.players[self.playerOrder[self.currentPlayer]]
-        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.renderCards(cards)),
-                   self.playerOrder[self.currentPlayer])
+        self.sendCards(bot, self.playerOrder[self.currentPlayer])
         msg = STRINGS['NEXT_START']
         tmp = self.currentPlayer + self.way
         if tmp == len(self.players):
@@ -220,6 +218,10 @@ class UnoGame:
                 tmp = len(self.players) - 1
         msg += ' - '.join(arr)
         bot.notice(msg, self.playerOrder[self.currentPlayer])
+
+    def sendCards(self, bot, who):
+        cards = self.players[who]
+        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.renderCards(cards)), who)
 
     def renderCards(self, cards):
         ret = []
@@ -366,6 +368,12 @@ class UnoBot:
             return
         game = self.games[trigger.sender]
         game.passs(bot, trigger)
+
+    def sendCards(self, bot, trigger):
+        if trigger.sender not in self.games:
+            return
+        game = self.games[trigger.sender]
+        game.sendCards(bot, trigger.nick)
 
     def topscores(self, bot):
         scores = self.getScores(bot)
@@ -532,6 +540,13 @@ def draw(bot, trigger):
 # this is not a typo, avoiding collision with Python's pass keyword
 def passs(bot, trigger):
     unobot.passs(bot, trigger)
+
+
+@module.commands('cards')
+@module.example('.cards')
+@module.priority('high')
+def cards(bot, trigger):
+    unobot.sendCards(bot, trigger)
 
 
 @module.commands('unohelp')
