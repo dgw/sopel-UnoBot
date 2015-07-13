@@ -216,21 +216,28 @@ class UnoGame:
     def sendCounts(self, bot):
         bot.say(STRINGS['SB_START'] + self.renderCounts(YES))
 
-    def renderCounts(self, include_current=NO):
-        tmp = self.currentPlayer
-        if not include_current:
-            tmp += self.way
+    def renderCounts(self, full=NO):
+        if full:
+            stop = len(self.players)
+            inc = abs(self.way)
+            plr = 0
+        else:
+            stop = self.currentPlayer
+            inc = self.way
+            plr = stop + inc
+            if plr == len(self.players):
+                plr = 0
+            if plr < 0:
+                plr = len(self.players) - 1
         arr = []
-        while True:
-            arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[tmp], len(
-                self.players[self.playerOrder[tmp]])))
-            tmp += self.way
-            if tmp == len(self.players):
-                tmp = 0
-            if tmp < 0:
-                tmp = len(self.players) - 1
-            if tmp == self.currentPlayer:
-                break
+        while plr != stop:
+            arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[plr], len(
+                self.players[self.playerOrder[plr]])))
+            plr += inc
+            if plr == len(self.players) and not full:
+                plr = 0
+            if plr < 0:
+                plr = len(self.players) - 1
         return ' - '.join(arr)
 
     def renderCards(self, cards):
