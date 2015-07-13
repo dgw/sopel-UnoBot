@@ -479,51 +479,68 @@ unobot = UnoBot()
 @module.commands('uno')
 @module.example('.uno')
 @module.priority('high')
+@module.require_chanmsg()
 def uno(bot, trigger):
+    """
+    Start UNO in the current channel.
+    """
     unobot.start(bot, trigger)
 
 
 @module.commands('unostop')
 @module.example('.unostop')
 @module.priority('high')
+@module.require_chanmsg()
 def unostop(bot, trigger):
+    """
+    Stops an UNO game in progress.
+    """
     unobot.stop(bot, trigger)
 
 
 @module.rule('^join$')
 @module.priority('high')
+@module.require_chanmsg()
 def join(bot, trigger):
     unobot.join(bot, trigger)
 
 
 @module.commands('deal')
 @module.priority('high')
+@module.require_chanmsg()
 def deal(bot, trigger):
     unobot.deal(bot, trigger)
 
 
 @module.commands('play')
 @module.priority('high')
+@module.require_chanmsg()
 def play(bot, trigger):
     unobot.play(bot, trigger)
 
 
 @module.commands('draw')
 @module.priority('high')
+@module.require_chanmsg()
 def draw(bot, trigger):
     unobot.draw(bot, trigger)
 
 
 @module.commands('pass')
 @module.priority('high')
+@module.require_chanmsg()
 # this is not a typo, avoiding collision with Python's pass keyword
 def passs(bot, trigger):
     unobot.passs(bot, trigger)
 
 
 @module.commands('unotop')
+@module.example('.unotop')
 @module.priority('high')
 def unotop(bot, trigger):
+    """
+    Shows the top 5 players by score. Unlike most UNO commands, can be sent in a PM.
+    """
     unobot.topscores(bot)
 
 
