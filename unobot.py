@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
 
-YES = WIN = True
+YES = WIN = STOP = True
 NO = False
 
 STRINGS = {
@@ -75,6 +75,11 @@ STRINGS = {
     'SKIPPED'        : '%s is skipped!',
     'REVERSED'       : 'Order reversed!',
     'GAINS'          : '%s gains %s points!',
+    'PLAYER_QUIT'    : 'Removing %s (player #%d) from the current UNO game.',
+    'PLAYER_KICK'    : 'Kicking %s (player #%d) from the game at %s\'s request.',
+    'OWNER_LEFT'     : 'Game owner left! New owner: %s',
+    'CANT_KICK'      : 'Only %s or a bot admin can kick players from the game.',
+    'CANT_CONTINUE'  : 'You need at least two people to play UNO. RIP.',
 }  # yapf: disable
 COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
@@ -111,6 +116,23 @@ class UnoGame:
                 ))
                 if len(self.players) > 1:
                     bot.notice(STRINGS['ENOUGH'], self.owner)
+
+    def quit(self, bot, trigger):
+        player = trigger.nick
+        playernum = self.playerOrder.index(player) + 1
+        bot.say(STRINGS['PLAYER_QUIT'] % (player, playernum))
+        return self.removePlayer(bot, player)
+
+    def kick(self, bot, trigger):
+        if trigger.nick != self.owner and not trigger.admin:
+            bot.say(STRINGS['CANT_KICK'] % self.owner)
+            return
+        player = tools.Identifier(trigger.group(3))
+        if player == trigger.nick:
+            return self.quit(bot, trigger)
+        playernum = self.playerOrder.index(player) + 1
+        bot.say(STRINGS['PLAYER_KICK'] % (player, playernum, trigger.nick))
+        return self.removePlayer(bot, player)
 
     def deal(self, bot, trigger):
         if len(self.players) < 2:
@@ -326,6 +348,34 @@ class UnoGame:
         if self.currentPlayer < 0:
             self.currentPlayer = len(self.players) - 1
 
+    def removePlayer(self, bot, player):
+        if len(self.players) == 1:
+            return STOP
+        if player not in self.players:
+            return
+        pl = self.playerOrder.index(player)
+        del self.players[player]
+        self.playerOrder.remove(player)
+        if self.startTime:
+            if player == self.owner:
+                self.owner = self.playerOrder[0]
+                if len(self.players) > 1:
+                    bot.say(STRINGS['OWNER_LEFT'] % self.owner)
+            if self.way < 0 and pl < self.currentPlayer:
+                self.incPlayer()
+            elif pl < self.currentPlayer:
+                self.way *= -1
+                self.incPlayer()
+                self.way *= -1
+            if len(self.players) > 1:
+                self.showOnTurn(bot)
+            else:
+                return STOP
+        else:
+            if player == self.owner:
+                self.owner = self.playerOrder[0]
+                bot.say(STRINGS['OWNER_LEFT'] % self.owner)
+
 
 class UnoBot:
     def __init__(self):
@@ -356,6 +406,24 @@ class UnoBot:
             self.games[trigger.sender].join(bot, trigger)
         else:
             bot.say(STRINGS['NOT_STARTED'])
+
+    def quit(self, bot, trigger):
+        if trigger.sender in self.games:
+            game = self.games[trigger.sender]
+            if game.quit(bot, trigger) == STOP:
+                bot.say(STRINGS['CANT_CONTINUE'])
+                self.stop(bot, trigger)
+        else:
+            return
+
+    def kick(self, bot, trigger):
+        if trigger.sender in self.games:
+            game = self.games[trigger.sender]
+            if game.kick(bot, trigger) == STOP:
+                bot.say(STRINGS['CANT_CONTINUE'])
+                self.stop(bot, trigger)
+        else:
+            return
 
     def deal(self, bot, trigger):
         if trigger.sender not in self.games:
@@ -538,6 +606,20 @@ def unostop(bot, trigger):
 @module.require_chanmsg()
 def join(bot, trigger):
     unobot.join(bot, trigger)
+
+
+@module.rule('^quit$')
+@module.priority('high')
+@module.require_chanmsg()
+def quit(bot, trigger):
+    unobot.quit(bot, trigger)
+
+
+@module.commands('unokick')
+@module.priority('high')
+@module.require_chanmsg()
+def kick(bot, trigger):
+    unobot.kick(bot, trigger)
 
 
 @module.commands('deal')
