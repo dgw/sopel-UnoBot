@@ -725,5 +725,22 @@ def unotop(bot, trigger):
     unobot.topscores(bot)
 
 
+@module.commands('unogames')
+@module.priority('high')
+@module.require_admin()
+def unogames(bot, trigger):
+    games = []
+    with lock:
+        for game in unobot.games.keys():
+            games.append(game)
+    if not len(games):
+        bot.say('No UNO games in progress.')
+        return
+    chancount = len(games)
+    chans = 'channel' if chancount == 1 else 'channels'
+    chanlist = ", ".join(games[:-2] + [" and ".join(games[-2:])])
+    bot.say('UNO in progress in %d %s: %s.' % (chancount, chans, chanlist))
+
+
 if __name__ == '__main__':
     print __doc__.strip()
