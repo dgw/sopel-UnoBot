@@ -4,7 +4,9 @@ This file is covered under the project license, located in LICENSE.md
 
 import willie.module as module
 import willie.tools as tools
-import json, random, threading
+import json
+import random
+import threading
 from datetime import datetime, timedelta
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
@@ -15,45 +17,46 @@ NO = False
 lock = threading.RLock()
 
 STRINGS = {
-    'ALREADY_STARTED': 'Game already started by %s! Type join to join!',
-    'GAME_STARTED'   : 'IRC-UNO started by %s - Type join to join!',
-    'GAME_STOPPED'   : 'Game stopped.',
-    'CANT_STOP'      : '%s is the game owner, you can\'t stop it!',
-    'DEALING_IN'     : 'Dealing %s into the game as player #%s!',
-    'DEALING_BACK'   : 'Here, %s, I saved your cards. You\'re back in the game as player #%s.',
-    'JOINED'         : 'Dealing %s into the game as player #%s!',
-    'ENOUGH'         : 'There are enough players to deal now.',
-    'NOT_STARTED'    : 'Game not started.',
-    'NOT_ENOUGH'     : 'Not enough players to deal yet.',
-    'NEEDS_TO_DEAL'  : '%s needs to deal.',
-    'ALREADY_DEALT'  : 'Already dealt.',
-    'ON_TURN'        : 'It\'s %s\'s turn.',
-    'DONT_HAVE'      : 'You don\'t have that card!',
-    'DOESNT_PLAY'    : 'That card can\'t be played now.',
-    'UNO'            : 'UNO! %s has ONE card left!',
-    'WIN'            : 'We have a winner: %s!!! This game took %s',
-    'DRAWN_ALREADY'  : 'You\'ve already drawn, either play or pass.',
-    'DRAWN_CARD'     : 'You drew: %s',
-    'DRAW_FIRST'     : 'You have to draw first.',
-    'PASSED'         : '%s passed!',
-    'NO_SCORES'      : 'No scores yet',
-    'SCORE_ROW'      : '#%s %s (%s points %s games, %s won, %s wasted)',
-    'TOP_CARD'       : '%s\'s turn. Top Card: %s',
-    'YOUR_CARDS'     : 'Your cards (%d): %s',
-    'NEXT_START'     : 'Next: ',
-    'SB_START'       : 'Standings: ',
-    'SB_PLAYER'      : '%s (%s cards)',
-    'D2'             : '%s draws two and is skipped!',
-    'CARDS'          : 'Cards: %s',
-    'WD4'            : '%s draws four and is skipped!',
-    'SKIPPED'        : '%s is skipped!',
-    'REVERSED'       : 'Order reversed!',
-    'GAINS'          : '%s gains %s points!',
-    'PLAYER_QUIT'    : 'Removing %s (player #%d) from the current UNO game.',
-    'PLAYER_KICK'    : 'Kicking %s (player #%d) from the game at %s\'s request.',
-    'OWNER_LEFT'     : 'Game owner left! New owner: %s',
-    'CANT_KICK'      : 'Only %s or a bot admin can kick players from the game.',
-    'CANT_CONTINUE'  : 'You need at least two people to play UNO. RIP.',
+    'ALREADY_STARTED': "Game already started by %s! Type join to join!",
+    'GAME_STARTED':    "IRC-UNO started by %s - Type join to join!",
+    'GAME_STOPPED':    "Game stopped.",
+    'CANT_STOP':       "%s is the game owner, you can't stop it!",
+    'DEALING_IN':      "Dealing %s into the game as player #%s!",
+    'DEALING_BACK':    "Here, %s, I saved your cards. You're back in the game as player #%s.",
+    'JOINED':          "Dealing %s into the game as player #%s!",
+    'ENOUGH':          "There are enough players to deal now.",
+    'NOT_STARTED':     "Game not started.",
+    'NOT_ENOUGH':      "Not enough players to deal yet.",
+    'NEEDS_TO_DEAL':   "%s needs to deal.",
+    'ALREADY_DEALT':   "Already dealt.",
+    'ON_TURN':         "It's %s's turn.",
+    'DONT_HAVE':       "You don't have that card!",
+    'DOESNT_PLAY':     "That card can't be played now.",
+    'UNO':             "UNO! %s has ONE card left!",
+    'WIN':             "We have a winner: %s!!! This game took %s",
+    'DRAWN_ALREADY':   "You've already drawn, either play or pass.",
+    'DRAWN_CARD':      "You drew: %s",
+    'DRAW_FIRST':      "You have to draw first.",
+    'PASSED':          "%s passed!",
+    'NO_SCORES':       "No scores yet",
+    'YOUR_RANK':       "You are ranked #%d by total score.",
+    'SCORE_ROW':       "#%s %s (%s points %s games, %s won, %s wasted)",
+    'TOP_CARD':        "%s's turn. Top Card: %s",
+    'YOUR_CARDS':      "Your cards (%d): %s",
+    'NEXT_START':      "Next: ",
+    'SB_START':        "Standings: ",
+    'SB_PLAYER':       "%s (%s cards)",
+    'D2':              "%s draws two and is skipped!",
+    'CARDS':           "Cards: %s",
+    'WD4':             "%s draws four and is skipped!",
+    'SKIPPED':         "%s is skipped!",
+    'REVERSED':        "Order reversed!",
+    'GAINS':           "%s gains %s points!",
+    'PLAYER_QUIT':     "Removing %s (player #%d) from the current UNO game.",
+    'PLAYER_KICK':     "Kicking %s (player #%d) from the game at %s's request.",
+    'OWNER_LEFT':      "Game owner left! New owner: %s",
+    'CANT_KICK':       "Only %s or a bot admin can kick players from the game.",
+    'CANT_CONTINUE':   "You need at least two people to play UNO. RIP.",
 }  # yapf: disable
 COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
@@ -61,7 +64,7 @@ SPECIAL_CARDS = ['W', 'WD4']
 
 
 class UnoGame:
-    def __init__(self, bot, trigger):
+    def __init__(self, trigger):
         self.owner = trigger.nick
         self.channel = trigger.sender
         self.deck = []
@@ -88,7 +91,7 @@ class UnoGame:
                     ))
                     return
                 for i in xrange(0, 7):
-                    self.players[trigger.nick].append(self.getCard())
+                    self.players[trigger.nick].append(self.get_card())
                 bot.say(STRINGS['DEALING_IN'] % (
                     trigger.nick, self.playerOrder.index(trigger.nick) + 1
                 ))
@@ -103,7 +106,7 @@ class UnoGame:
         player = trigger.nick
         playernum = self.playerOrder.index(player) + 1
         bot.say(STRINGS['PLAYER_QUIT'] % (player, playernum))
-        return self.removePlayer(bot, player)
+        return self.remove_player(bot, player)
 
     def kick(self, bot, trigger):
         if trigger.nick != self.owner and not trigger.admin:
@@ -114,7 +117,7 @@ class UnoGame:
             return self.quit(bot, trigger)
         playernum = self.playerOrder.index(player) + 1
         bot.say(STRINGS['PLAYER_KICK'] % (player, playernum, trigger.nick))
-        return self.removePlayer(bot, player)
+        return self.remove_player(bot, player)
 
     def deal(self, bot, trigger):
         if len(self.players) < 2:
@@ -128,16 +131,16 @@ class UnoGame:
             return
         with lock:
             self.startTime = datetime.now()
-            self.deck = self.createDeck()
+            self.deck = self.create_deck()
             for i in xrange(0, 7):
                 for p in self.players:
-                    self.players[p].append(self.getCard())
-            self.topCard = self.getCard()
+                    self.players[p].append(self.get_card())
+            self.topCard = self.get_card()
             while self.topCard in ['W', 'WD4']:
-                self.topCard = self.getCard()
+                self.topCard = self.get_card()
             self.currentPlayer = 1
-            self.cardPlayed(bot, self.topCard)
-            self.showOnTurn(bot)
+            self.card_played(bot, self.topCard)
+            self.show_on_turn(bot)
 
     def play(self, bot, trigger):
         if not self.deck:
@@ -162,21 +165,21 @@ class UnoGame:
                 bot.notice(STRINGS['DONT_HAVE'], self.playerOrder[pl])
                 return
             playcard = color + card
-            if not self.cardPlayable(playcard):
+            if not self.card_playable(playcard):
                 bot.notice(STRINGS['DOESNT_PLAY'],
                            self.playerOrder[pl])
                 return
             self.drawn = NO
             self.players[self.playerOrder[pl]].remove(searchcard)
 
-            self.incPlayer()
-            self.cardPlayed(bot, playcard)
+            self.inc_player()
+            self.card_played(bot, playcard)
 
             if len(self.players[self.playerOrder[pl]]) == 1:
                 bot.say(STRINGS['UNO'] % self.playerOrder[pl])
             elif len(self.players[self.playerOrder[pl]]) == 0:
                 return WIN
-            self.showOnTurn(bot)
+            self.show_on_turn(bot)
 
     def draw(self, bot, trigger):
         if not self.deck:
@@ -190,12 +193,11 @@ class UnoGame:
                            self.playerOrder[self.currentPlayer])
                 return
             self.drawn = YES
-            c = self.getCard()
+            c = self.get_card()
             self.players[self.playerOrder[self.currentPlayer]].append(c)
-        bot.notice(STRINGS['DRAWN_CARD'] % self.renderCards([c]), trigger.nick)
+        bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards([c]), trigger.nick)
 
-    # this is not a typo, avoiding collision with Python's pass keyword
-    def passs(self, bot, trigger):
+    def pass_(self, bot, trigger):
         if not self.deck:
             return
         with lock:
@@ -208,28 +210,28 @@ class UnoGame:
                 return
             self.drawn = NO
             bot.say(STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
-            self.incPlayer()
-        self.showOnTurn(bot)
+            self.inc_player()
+        self.show_on_turn(bot)
 
-    def showOnTurn(self, bot):
+    def show_on_turn(self, bot):
         with lock:
             pl = self.playerOrder[self.currentPlayer]
-            bot.say(STRINGS['TOP_CARD'] % (pl, self.renderCards([self.topCard])))
-            self.sendCards(bot, self.playerOrder[self.currentPlayer])
-            self.sendNext(bot)
+            bot.say(STRINGS['TOP_CARD'] % (pl, self.render_cards([self.topCard])))
+            self.send_cards(bot, self.playerOrder[self.currentPlayer])
+            self.send_next(bot)
 
-    def sendCards(self, bot, who):
+    def send_cards(self, bot, who):
         cards = self.players[who]
-        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.renderCards(cards)), who)
+        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.render_cards(cards)), who)
 
-    def sendNext(self, bot):
+    def send_next(self, bot):
         with lock:
-            bot.notice(STRINGS['NEXT_START'] + self.renderCounts(), self.playerOrder[self.currentPlayer])
+            bot.notice(STRINGS['NEXT_START'] + self.render_counts(), self.playerOrder[self.currentPlayer])
 
-    def sendCounts(self, bot):
-        bot.say(STRINGS['SB_START'] + self.renderCounts(YES))
+    def send_counts(self, bot):
+        bot.say(STRINGS['SB_START'] + self.render_counts(YES))
 
-    def renderCounts(self, full=NO):
+    def render_counts(self, full=NO):
         with lock:
             if full:
                 stop = len(self.players)
@@ -254,7 +256,8 @@ class UnoGame:
                     plr = len(self.players) - 1
         return ' - '.join(arr)
 
-    def renderCards(self, cards):
+    @staticmethod
+    def render_cards(cards):
         ret = []
         for c in sorted(cards):
             if c in ['W', 'WD4']:
@@ -275,7 +278,7 @@ class UnoGame:
             ret.append(t)
         return ''.join(ret)
 
-    def cardPlayable(self, card):
+    def card_playable(self, card):
         if 'W' in card and card[0] in CARD_COLORS:
             return True
         with lock:
@@ -284,41 +287,42 @@ class UnoGame:
             return ((card[0] == self.topCard[0]) or
                     (card[1] == self.topCard[1])) and ('W' not in card)
 
-    def cardPlayed(self, bot, card):
+    def card_played(self, bot, card):
         with lock:
             if 'D2' in card:
                 bot.say(STRINGS['D2'] % self.playerOrder[self.currentPlayer])
-                z = [self.getCard(), self.getCard()]
-                bot.notice(STRINGS['CARDS'] % self.renderCards(z),
+                z = [self.get_card(), self.get_card()]
+                bot.notice(STRINGS['CARDS'] % self.render_cards(z),
                            self.playerOrder[self.currentPlayer])
                 self.players[self.playerOrder[self.currentPlayer]].extend(z)
-                self.incPlayer()
+                self.inc_player()
             elif 'WD4' in card:
                 bot.say(STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
-                z = [self.getCard(), self.getCard(), self.getCard(),
-                     self.getCard()]
-                bot.notice(STRINGS['CARDS'] % self.renderCards(z),
+                z = [self.get_card(), self.get_card(), self.get_card(),
+                     self.get_card()]
+                bot.notice(STRINGS['CARDS'] % self.render_cards(z),
                            self.playerOrder[self.currentPlayer])
                 self.players[self.playerOrder[self.currentPlayer]].extend(z)
-                self.incPlayer()
+                self.inc_player()
             elif 'S' in card:
                 bot.say(STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
-                self.incPlayer()
+                self.inc_player()
             elif card[1] == 'R' and 'W' not in card:
                 bot.say(STRINGS['REVERSED'])
                 self.way = -self.way
-                self.incPlayer()
-                self.incPlayer()
+                self.inc_player()
+                self.inc_player()
             self.topCard = card
 
-    def getCard(self):
+    def get_card(self):
         with lock:
             ret = self.deck.pop(0)
             if not self.deck:
-                self.deck = self.createDeck()
+                self.deck = self.create_deck()
         return ret
 
-    def createDeck(self):
+    @staticmethod
+    def create_deck():
         ret = []
         for a in COLORED_CARD_NUMS:
             for b in CARD_COLORS:
@@ -331,7 +335,7 @@ class UnoGame:
         random.shuffle(ret)
         return ret
 
-    def incPlayer(self):
+    def inc_player(self):
         with lock:
             self.currentPlayer += self.way
             if self.currentPlayer == len(self.players):
@@ -339,7 +343,7 @@ class UnoGame:
             if self.currentPlayer < 0:
                 self.currentPlayer = len(self.players) - 1
 
-    def removePlayer(self, bot, player):
+    def remove_player(self, bot, player):
         if len(self.players) == 1:
             return STOP
         if player not in self.players:
@@ -354,17 +358,17 @@ class UnoGame:
                     if len(self.players) > 1:
                         bot.say(STRINGS['OWNER_LEFT'] % self.owner)
                 if self.way < 0 and pl <= self.currentPlayer:
-                    self.incPlayer()
+                    self.inc_player()
                 elif pl < self.currentPlayer:
                     self.way *= -1
-                    self.incPlayer()
+                    self.inc_player()
                     self.way *= -1
                 if self.currentPlayer >= len(self.playerOrder):
                     self.currentPlayer = 0
                 if self.currentPlayer < 0:
                     self.currentPlayer = len(self.playerOrder) - 1
                 if len(self.players) > 1:
-                    self.showOnTurn(bot)
+                    self.show_on_turn(bot)
                 else:
                     return STOP
             else:
@@ -383,7 +387,7 @@ class UnoBot:
         if trigger.sender in self.games:
             bot.say(STRINGS['ALREADY_STARTED'] % self.games[trigger.sender].owner)
         else:
-            self.games[trigger.sender] = UnoGame(bot, trigger)
+            self.games[trigger.sender] = UnoGame(trigger)
             bot.say(STRINGS['GAME_STARTED'] % self.games[trigger.sender].owner)
 
     def stop(self, bot, trigger):
@@ -439,7 +443,7 @@ class UnoBot:
             minutes, seconds = divmod(remainder, 60)
             game_duration = '%.2d:%.2d:%.2d' % (hours, minutes, seconds)
             bot.say(STRINGS['WIN'] % (winner, game_duration))
-            self.gameEnded(bot, trigger, winner)
+            self.game_ended(bot, trigger, winner)
 
     def draw(self, bot, trigger):
         if trigger.sender not in self.games:
@@ -447,68 +451,70 @@ class UnoBot:
         game = self.games[trigger.sender]
         game.draw(bot, trigger)
 
-    # this is not a typo, avoiding collision with Python's pass keyword
-    def passs(self, bot, trigger):
+    def pass_(self, bot, trigger):
         if trigger.sender not in self.games:
             return
         game = self.games[trigger.sender]
-        game.passs(bot, trigger)
+        game.pass_(bot, trigger)
 
-    def sendCards(self, bot, trigger):
+    def send_cards(self, bot, trigger):
         if trigger.sender not in self.games:
             return
         game = self.games[trigger.sender]
-        game.sendCards(bot, trigger.nick)
+        game.send_cards(bot, trigger.nick)
 
-    def sendCounts(self, bot, trigger):
+    def send_counts(self, bot, trigger):
         if trigger.sender not in self.games:
             return
         game = self.games[trigger.sender]
-        game.sendCounts(bot)
+        game.send_counts(bot)
 
-    def topscores(self, bot):
-        scores = self.getScores(bot)
+    def top_scores(self, bot, trigger):
+        scores = self.get_scores(bot)
         if not scores:
             bot.say(STRINGS['NO_SCORES'])
             return
         order = sorted(scores.keys(), key=lambda k: scores[k]['points'], reverse=YES)
+        rank = order.index(trigger.nick) + 1
+        if not rank <= 5:
+            bot.notice(STRINGS['YOUR_RANK'] % rank, trigger.nick)
         i = 1
         for player in order[:5]:
             if not scores[player]['points']:
-                # nobody else has any points; stop printing
-                break
+                break  # nobody else has any points; stop printing
             bot.say(STRINGS['SCORE_ROW'] %
                     (i, player, scores[player]['points'], scores[player]['games'], scores[player]['wins'],
                      timedelta(seconds=int(scores[player]['playtime']))))
             i += 1
 
-    def gameEnded(self, bot, trigger, winner):
-        game = self.games[trigger.sender]
-        try:
-            score = 0
-            for p in game.players:
-                for c in game.players[p]:
-                    if c[0] == 'W':
-                        score += self.special_scores[c]
-                    elif c[1] in ['S', 'R', 'D']:
-                        score += self.special_scores[c[1:]]
-                    else:
-                        score += int(c[1])
-            bot.say(STRINGS['GAINS'] % (winner, score))
-            self.updateScores(bot, game.players.keys(), winner, score,
-                              (datetime.now() - game.startTime).seconds)
-        except Exception, e:
-            print 'Score error: %s' % e
-        del self.games[trigger.sender]
+    def game_ended(self, bot, trigger, winner):
+        with lock:
+            game = self.games[trigger.sender]
+            try:
+                score = 0
+                for p in game.players:
+                    for c in game.players[p]:
+                        if c[0] == 'W':
+                            score += self.special_scores[c]
+                        elif c[1] in ['S', 'R', 'D']:
+                            score += self.special_scores[c[1:]]
+                        else:
+                            score += int(c[1])
+                bot.say(STRINGS['GAINS'] % (winner, score))
+                self.update_scores(bot, game.players.keys(), winner, score,
+                                   (datetime.now() - game.startTime).seconds)
+            except Exception, e:
+                bot.say("UNO score error: %s" % e)
+            del self.games[trigger.sender]
 
-    def updateScores(self, bot, players, winner, score, time):
+    def update_scores(self, bot, players, winner, score, time):
         import sys
         if sys.version_info.major < 3:
             string = unicode
         else:
             string = str
         with lock:
-            scores = self.getScores(bot)
+            scores = self.get_scores(bot)
             winner = string(winner)
             for pl in players:
                 pl = string(pl)
@@ -522,65 +528,70 @@ class UnoBot:
                 with open(self.scoreFile, 'w+') as scorefile:
                     json.dump(scores, scorefile)
             except Exception, e:
-                bot.say('Error saving UNO score file: %s' % e)
+                bot.say("Error saving UNO score file: %s" % e)
 
-    def getScores(self, bot):
+    def get_scores(self, bot):
         scores = {}
         try:
-            scores = self.loadScores()
+            scores = self.load_scores(bot)
         except ValueError:
             try:
-                self.convertScorefile(bot)
-                scores = self.loadScores()
+                self.convert_score_file(bot)
+                scores = self.load_scores(bot)
             except ValueError:
-                bot.say('Something has gone horribly wrong with the UNO scores.')
+                bot.say("Something has gone horribly wrong with the UNO scores.")
         return scores
 
-    def loadScores(self):
+    def load_scores(self, bot):
+        scores = {}
         with lock:
             try:
                 with open(self.scoreFile, 'r+') as scorefile:
                     scores = json.load(scorefile)
-            except:
-                pass
-        return scores or {}
+            except ValueError, e:
+                bot.say("Error loading UNO scores: %s" % e)
+            except IOError, e:
+                bot.say("Error opening UNO scores: %s" % e)
+        return scores
 
-    def convertScorefile(self, bot):
+    def convert_score_file(self, bot):
         scores = {}
         with lock:
             try:
                 with open(self.scoreFile, 'r+') as scorefile:
                     for line in scorefile:
                         tokens = line.replace('\n', '').split(' ')
-                        if len(tokens) < 4: continue
-                        if len(tokens) == 4: tokens.append(0)
+                        if len(tokens) < 4:
+                            continue
+                        if len(tokens) == 4:
+                            tokens.append(0)
                         scores[tools.Identifier(tokens[0])] = {
-                            'games'   : int(tokens[1]),
-                            'wins'    : int(tokens[2]),
-                            'points'  : int(tokens[3]),
+                            'games':    int(tokens[1]),
+                            'wins':     int(tokens[2]),
+                            'points':   int(tokens[3]),
                             'playtime': int(tokens[4]),
                         }
             except Exception, e:
-                bot.say('Score conversion error: %s' % e)
+                bot.say("Score conversion error: %s" % e)
             else:
-                bot.say('Converted UNO score file to new JSON format.')
+                bot.say("Converted UNO score file to new JSON format.")
             try:
                 with open(self.scoreFile, 'w+') as scorefile:
                     json.dump(scores, scorefile)
             except Exception, e:
-                bot.say('Error converting UNO score file: %s' % e)
+                bot.say("Error converting UNO score file: %s" % e)
             else:
-                bot.say('Wrote UNO score file in new JSON format.')
+                bot.say("Wrote UNO score file in new JSON format.")
 
 
 unobot = UnoBot()
 
 
 @module.commands('uno')
-@module.example('.uno')
+@module.example(".uno")
 @module.priority('high')
-@module.require_chanmsg()
-def uno(bot, trigger):
+@module.require_chanmsg
+def unostart(bot, trigger):
     """
     Start UNO in the current channel.
     """
@@ -588,9 +599,9 @@ def uno(bot, trigger):
 
 
 @module.commands('unostop')
-@module.example('.unostop')
+@module.example(".unostop")
 @module.priority('high')
-@module.require_chanmsg()
+@module.require_chanmsg
 def unostop(bot, trigger):
     """
     Stops an UNO game in progress.
@@ -600,74 +611,77 @@ def unostop(bot, trigger):
 
 @module.rule('^join$')
 @module.priority('high')
-@module.require_chanmsg()
-def join(bot, trigger):
+@module.require_chanmsg
+def unojoin(bot, trigger):
     unobot.join(bot, trigger)
 
 
 @module.rule('^quit$')
 @module.priority('high')
-@module.require_chanmsg()
-def quit(bot, trigger):
+@module.require_chanmsg
+def unoquit(bot, trigger):
     unobot.quit(bot, trigger)
 
 
 @module.commands('unokick')
 @module.priority('high')
-@module.require_chanmsg()
-def kick(bot, trigger):
+@module.require_chanmsg
+def unokick(bot, trigger):
     unobot.kick(bot, trigger)
 
 
 @module.commands('deal')
 @module.priority('high')
-@module.require_chanmsg()
-def deal(bot, trigger):
+@module.require_chanmsg
+def unodeal(bot, trigger):
     unobot.deal(bot, trigger)
 
 
 @module.commands('play')
 @module.priority('high')
-@module.require_chanmsg()
-def play(bot, trigger):
+@module.require_chanmsg
+def unoplay(bot, trigger):
     unobot.play(bot, trigger)
 
 
 @module.commands('draw')
 @module.priority('high')
-@module.require_chanmsg()
-def draw(bot, trigger):
+@module.require_chanmsg
+def unodraw(bot, trigger):
     unobot.draw(bot, trigger)
 
 
 @module.commands('pass')
 @module.priority('high')
-@module.require_chanmsg()
-# this is not a typo, avoiding collision with Python's pass keyword
-def passs(bot, trigger):
-    unobot.passs(bot, trigger)
+@module.require_chanmsg
+def unopass(bot, trigger):
+    unobot.pass_(bot, trigger)
 
 
 @module.commands('cards')
-@module.example('.cards')
+@module.example(".cards")
 @module.priority('high')
-def cards(bot, trigger):
-    unobot.sendCards(bot, trigger)
+@module.require_chanmsg
+def unocards(bot, trigger):
+    """
+    Retrieve your current UNO hand for the current channel's game.
+    """
+    unobot.send_cards(bot, trigger)
 
 
 @module.commands('counts')
-@module.example('.counts')
+@module.example(".counts")
 @module.priority('high')
-@module.require_chanmsg()
-def counts(bot, trigger):
+@module.require_chanmsg
+def unocounts(bot, trigger):
     """
     Sends current UNO card counts to the channel, if a game is in progress.
     """
-    unobot.sendCounts(bot, trigger)
+    unobot.send_counts(bot, trigger)
 
 
 @module.commands('unohelp')
-@module.example('.unohelp')
+@module.example(".unohelp")
 @module.priority('high')
 def unohelp(bot, trigger):
     """
@@ -675,42 +689,42 @@ def unohelp(bot, trigger):
     """
     p = bot.config.core.help_prefix
     r = trigger.nick
-    bot.reply('I am sending you UNO help privately. If you do not see it, configure your client to show '
-              'non-server notices in the current channel. Cards are sent the same way during game-play.')
-    bot.notice('UNO is played using the %splay, %sdraw, and %spass commands.' % (p, p, p), r)
-    bot.notice('To play a card, say %splay c f (where c = r/g/b/y and f = the card\'s face value).'
-               ' e.g. %splay r 2 to play a red 2 or %splay b d2 to play a blue D2.' % (p, p, p), r)
-    bot.notice('Wild (W) and Wild Draw 4 (WD4) cards are played as %splay w[d4] c'
-               ' (where c = the color you wish to change the discard pile to).' % p, r)
-    bot.notice('If you cannot play a card on your turn, you must %sdraw. If that card is not playable, '
-               'you must %spass (forfeiting your turn).' % (p, p), r)
+    bot.reply("I am sending you UNO help privately. If you do not see it, configure your client to show "
+              "non-server notices in the current channel. Cards are sent the same way during game-play.")
+    bot.notice("UNO is played using the %splay, %sdraw, and %spass commands." % (p, p, p), r)
+    bot.notice("To play a card, say %splay c f (where c = r/g/b/y and f = the card's face value)."
+               " e.g. %splay r 2 to play a red 2 or %splay b d2 to play a blue D2." % (p, p, p), r)
+    bot.notice("Wild (W) and Wild Draw 4 (WD4) cards are played as %splay w[d4] c"
+               " (where c = the color you wish to change the discard pile to)." % p, r)
+    bot.notice("If you cannot play a card on your turn, you must %sdraw. If that card is not "
+               "playable, you must %spass (forfeiting your turn)." % (p, p), r)
 
 
 @module.commands('unotop')
-@module.example('.unotop')
+@module.example(".unotop")
 @module.priority('high')
 def unotop(bot, trigger):
     """
     Shows the top 5 players by score. Unlike most UNO commands, can be sent in a PM.
     """
-    unobot.topscores(bot)
+    unobot.top_scores(bot, trigger)
 
 
 @module.commands('unogames')
 @module.priority('high')
-@module.require_admin()
+@module.require_admin
 def unogames(bot, trigger):
     games = []
     with lock:
         for game in unobot.games.keys():
             games.append(game)
     if not len(games):
-        bot.say('No UNO games in progress.')
+        bot.say('No UNO games in progress, %s.' % trigger.nick)
         return
     chancount = len(games)
     chans = 'channel' if chancount == 1 else 'channels'
     chanlist = ", ".join(games[:-2] + [" and ".join(games[-2:])])
-    bot.say('UNO in progress in %d %s: %s.' % (chancount, chans, chanlist))
+    bot.say('%s, UNO is in progress in %d %s: %s.' % (trigger.nick, chancount, chans, chanlist))
 
 
 if __name__ == '__main__':
