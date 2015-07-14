@@ -33,13 +33,15 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import willie.module as module
 import willie.tools as tools
-import json, random
+import json, random, threading
 from datetime import datetime, timedelta
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
 
 YES = WIN = STOP = True
 NO = False
+
+lock = threading.RLock()
 
 STRINGS = {
     'ALREADY_STARTED': 'Game already started by %s! Type join to join!',
@@ -105,7 +107,8 @@ class UnoGame:
     def join(self, bot, trigger):
         if trigger.nick not in self.players:
             self.players[trigger.nick] = []
-            self.playerOrder.append(trigger.nick)
+            with lock:
+                self.playerOrder.append(trigger.nick)
             if self.deck:
                 if trigger.nick in self.deadPlayers:
                     self.players[trigger.nick] = self.deadPlayers.pop(trigger.nick)
@@ -152,17 +155,18 @@ class UnoGame:
         if len(self.deck):
             bot.say(STRINGS['ALREADY_DEALT'])
             return
-        self.startTime = datetime.now()
-        self.deck = self.createDeck()
-        for i in xrange(0, 7):
-            for p in self.players:
-                self.players[p].append(self.getCard())
-        self.topCard = self.getCard()
-        while self.topCard in ['W', 'WD4']:
+        with lock:
+            self.startTime = datetime.now()
+            self.deck = self.createDeck()
+            for i in xrange(0, 7):
+                for p in self.players:
+                    self.players[p].append(self.getCard())
             self.topCard = self.getCard()
-        self.currentPlayer = 1
-        self.cardPlayed(bot, self.topCard)
-        self.showOnTurn(bot)
+            while self.topCard in ['W', 'WD4']:
+                self.topCard = self.getCard()
+            self.currentPlayer = 1
+            self.cardPlayed(bot, self.topCard)
+            self.showOnTurn(bot)
 
     def play(self, bot, trigger):
         if not self.deck:
@@ -180,28 +184,28 @@ class UnoGame:
             searchcard = card
         else:
             return
-        if searchcard not in self.players[self.playerOrder[self.currentPlayer]]:
-            bot.notice(STRINGS['DONT_HAVE'], self.playerOrder[self.currentPlayer])
-            return
-        playcard = color + card
-        if not self.cardPlayable(playcard):
-            bot.notice(STRINGS['DOESNT_PLAY'],
-                       self.playerOrder[self.currentPlayer])
-            return
-        self.drawn = NO
-        self.players[self.playerOrder[self.currentPlayer]].remove(searchcard)
 
-        pl = self.currentPlayer
+        with lock:
+            pl = self.currentPlayer
+            if searchcard not in self.players[self.playerOrder[pl]]:
+                bot.notice(STRINGS['DONT_HAVE'], self.playerOrder[pl])
+                return
+            playcard = color + card
+            if not self.cardPlayable(playcard):
+                bot.notice(STRINGS['DOESNT_PLAY'],
+                           self.playerOrder[pl])
+                return
+            self.drawn = NO
+            self.players[self.playerOrder[pl]].remove(searchcard)
 
-        self.incPlayer()
-        self.cardPlayed(bot, playcard)
+            self.incPlayer()
+            self.cardPlayed(bot, playcard)
 
-        if len(self.players[self.playerOrder[pl]]) == 1:
-            bot.say(STRINGS['UNO'] % self.playerOrder[pl])
-        elif len(self.players[self.playerOrder[pl]]) == 0:
-            return WIN
-
-        self.showOnTurn(bot)
+            if len(self.players[self.playerOrder[pl]]) == 1:
+                bot.say(STRINGS['UNO'] % self.playerOrder[pl])
+            elif len(self.players[self.playerOrder[pl]]) == 0:
+                return WIN
+            self.showOnTurn(bot)
 
     def draw(self, bot, trigger):
         if not self.deck:
@@ -209,69 +213,74 @@ class UnoGame:
         if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
-        if self.drawn:
-            bot.notice(STRINGS['DRAWN_ALREADY'],
-                       self.playerOrder[self.currentPlayer])
-            return
-        self.drawn = YES
-        c = self.getCard()
-        self.players[self.playerOrder[self.currentPlayer]].append(c)
+        with lock:
+            if self.drawn:
+                bot.notice(STRINGS['DRAWN_ALREADY'],
+                           self.playerOrder[self.currentPlayer])
+                return
+            self.drawn = YES
+            c = self.getCard()
+            self.players[self.playerOrder[self.currentPlayer]].append(c)
         bot.notice(STRINGS['DRAWN_CARD'] % self.renderCards([c]), trigger.nick)
 
     # this is not a typo, avoiding collision with Python's pass keyword
     def passs(self, bot, trigger):
         if not self.deck:
             return
-        if trigger.nick != self.playerOrder[self.currentPlayer]:
-            bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
-            return
-        if not self.drawn:
-            bot.notice(STRINGS['DRAW_FIRST'],
-                       self.playerOrder[self.currentPlayer])
-            return
-        self.drawn = NO
-        bot.say(STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
-        self.incPlayer()
+        with lock:
+            if trigger.nick != self.playerOrder[self.currentPlayer]:
+                bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+                return
+            if not self.drawn:
+                bot.notice(STRINGS['DRAW_FIRST'],
+                           self.playerOrder[self.currentPlayer])
+                return
+            self.drawn = NO
+            bot.say(STRINGS['PASSED'] % self.playerOrder[self.currentPlayer])
+            self.incPlayer()
         self.showOnTurn(bot)
 
     def showOnTurn(self, bot):
-        pl = self.playerOrder[self.currentPlayer]
-        bot.say(STRINGS['TOP_CARD'] % (pl, self.renderCards([self.topCard])))
-        self.sendCards(bot, self.playerOrder[self.currentPlayer])
-        self.sendNext(bot)
+        with lock:
+            pl = self.playerOrder[self.currentPlayer]
+            bot.say(STRINGS['TOP_CARD'] % (pl, self.renderCards([self.topCard])))
+            self.sendCards(bot, self.playerOrder[self.currentPlayer])
+            self.sendNext(bot)
 
     def sendCards(self, bot, who):
         cards = self.players[who]
         bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.renderCards(cards)), who)
 
     def sendNext(self, bot):
-        bot.notice(STRINGS['NEXT_START'] + self.renderCounts(), self.playerOrder[self.currentPlayer])
+        with lock:
+            bot.notice(STRINGS['NEXT_START'] + self.renderCounts(), self.playerOrder[self.currentPlayer])
 
     def sendCounts(self, bot):
         bot.say(STRINGS['SB_START'] + self.renderCounts(YES))
 
     def renderCounts(self, full=NO):
-        if full:
-            stop = len(self.players)
-            inc = abs(self.way)
-            plr = 0
-        else:
-            stop = self.currentPlayer
-            inc = self.way
-            plr = stop + inc
-            if plr == len(self.players):
+        with lock:
+            if full:
+                stop = len(self.players)
+                inc = abs(self.way)
                 plr = 0
-            if plr < 0:
-                plr = len(self.players) - 1
-        arr = []
-        while plr != stop:
-            arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[plr], len(
-                self.players[self.playerOrder[plr]])))
-            plr += inc
-            if plr == len(self.players) and not full:
-                plr = 0
-            if plr < 0:
-                plr = len(self.players) - 1
+            else:
+                stop = self.currentPlayer
+                inc = self.way
+                plr = stop + inc
+                if plr == len(self.players):
+                    plr = 0
+                if plr < 0:
+                    plr = len(self.players) - 1
+            arr = []
+            while plr != stop:
+                arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[plr], len(
+                    self.players[self.playerOrder[plr]])))
+                plr += inc
+                if plr == len(self.players) and not full:
+                    plr = 0
+                if plr < 0:
+                    plr = len(self.players) - 1
         return ' - '.join(arr)
 
     def renderCards(self, cards):
@@ -298,42 +307,44 @@ class UnoGame:
     def cardPlayable(self, card):
         if 'W' in card and card[0] in CARD_COLORS:
             return True
-        if 'W' in self.topCard:
-            return card[0] == self.topCard[0]
-        return ((card[0] == self.topCard[0]) or
-                (card[1] == self.topCard[1])) and ('W' not in card)
+        with lock:
+            if 'W' in self.topCard:
+                return card[0] == self.topCard[0]
+            return ((card[0] == self.topCard[0]) or
+                    (card[1] == self.topCard[1])) and ('W' not in card)
 
     def cardPlayed(self, bot, card):
-        if 'D2' in card:
-            bot.say(STRINGS['D2'] % self.playerOrder[self.currentPlayer])
-            z = [self.getCard(), self.getCard()]
-            bot.notice(STRINGS['CARDS'] % self.renderCards(z),
-                       self.playerOrder[self.currentPlayer])
-            self.players[self.playerOrder[self.currentPlayer]].extend(z)
-            self.incPlayer()
-        elif 'WD4' in card:
-            bot.say(STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
-            z = [self.getCard(), self.getCard(), self.getCard(),
-                 self.getCard()]
-            bot.notice(STRINGS['CARDS'] % self.renderCards(z),
-                       self.playerOrder[self.currentPlayer])
-            self.players[self.playerOrder[self.currentPlayer]].extend(z)
-            self.incPlayer()
-        elif 'S' in card:
-            bot.say(STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
-            self.incPlayer()
-        elif card[1] == 'R' and 'W' not in card:
-            bot.say(STRINGS['REVERSED'])
-            self.way = -self.way
-            self.incPlayer()
-            self.incPlayer()
-        self.topCard = card
+        with lock:
+            if 'D2' in card:
+                bot.say(STRINGS['D2'] % self.playerOrder[self.currentPlayer])
+                z = [self.getCard(), self.getCard()]
+                bot.notice(STRINGS['CARDS'] % self.renderCards(z),
+                           self.playerOrder[self.currentPlayer])
+                self.players[self.playerOrder[self.currentPlayer]].extend(z)
+                self.incPlayer()
+            elif 'WD4' in card:
+                bot.say(STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
+                z = [self.getCard(), self.getCard(), self.getCard(),
+                     self.getCard()]
+                bot.notice(STRINGS['CARDS'] % self.renderCards(z),
+                           self.playerOrder[self.currentPlayer])
+                self.players[self.playerOrder[self.currentPlayer]].extend(z)
+                self.incPlayer()
+            elif 'S' in card:
+                bot.say(STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
+                self.incPlayer()
+            elif card[1] == 'R' and 'W' not in card:
+                bot.say(STRINGS['REVERSED'])
+                self.way = -self.way
+                self.incPlayer()
+                self.incPlayer()
+            self.topCard = card
 
     def getCard(self):
-        ret = self.deck[0]
-        self.deck.pop(0)
-        if not self.deck:
-            self.deck = self.createDeck()
+        with lock:
+            ret = self.deck.pop(0)
+            if not self.deck:
+                self.deck = self.createDeck()
         return ret
 
     def createDeck(self):
@@ -350,39 +361,41 @@ class UnoGame:
         return ret
 
     def incPlayer(self):
-        self.currentPlayer += self.way
-        if self.currentPlayer == len(self.players):
-            self.currentPlayer = 0
-        if self.currentPlayer < 0:
-            self.currentPlayer = len(self.players) - 1
+        with lock:
+            self.currentPlayer += self.way
+            if self.currentPlayer == len(self.players):
+                self.currentPlayer = 0
+            if self.currentPlayer < 0:
+                self.currentPlayer = len(self.players) - 1
 
     def removePlayer(self, bot, player):
         if len(self.players) == 1:
             return STOP
         if player not in self.players:
             return
-        pl = self.playerOrder.index(player)
-        self.deadPlayers[player] = self.players.pop(player)
-        self.playerOrder.remove(player)
-        if self.startTime:
-            if player == self.owner:
-                self.owner = self.playerOrder[0]
+        with lock:
+            pl = self.playerOrder.index(player)
+            self.deadPlayers[player] = self.players.pop(player)
+            self.playerOrder.remove(player)
+            if self.startTime:
+                if player == self.owner:
+                    self.owner = self.playerOrder[0]
+                    if len(self.players) > 1:
+                        bot.say(STRINGS['OWNER_LEFT'] % self.owner)
+                if self.way < 0 and pl < self.currentPlayer:
+                    self.incPlayer()
+                elif pl < self.currentPlayer:
+                    self.way *= -1
+                    self.incPlayer()
+                    self.way *= -1
                 if len(self.players) > 1:
-                    bot.say(STRINGS['OWNER_LEFT'] % self.owner)
-            if self.way < 0 and pl < self.currentPlayer:
-                self.incPlayer()
-            elif pl < self.currentPlayer:
-                self.way *= -1
-                self.incPlayer()
-                self.way *= -1
-            if len(self.players) > 1:
-                self.showOnTurn(bot)
+                    self.showOnTurn(bot)
+                else:
+                    return STOP
             else:
-                return STOP
-        else:
-            if player == self.owner:
-                self.owner = self.playerOrder[0]
-                bot.say(STRINGS['OWNER_LEFT'] % self.owner)
+                if player == self.owner:
+                    self.owner = self.playerOrder[0]
+                    bot.say(STRINGS['OWNER_LEFT'] % self.owner)
 
 
 class UnoBot:
@@ -519,21 +532,22 @@ class UnoBot:
             string = unicode
         else:
             string = str
-        scores = self.getScores(bot)
-        winner = string(winner)
-        for pl in players:
-            pl = string(pl)
-            if pl not in scores:
-                scores[pl] = {'games': 0, 'wins': 0, 'points': 0, 'playtime': 0}
-            scores[pl]['games'] += 1
-            scores[pl]['playtime'] += time
-        scores[winner]['wins'] += 1
-        scores[winner]['points'] += score
-        try:
-            with open(self.scoreFile, 'w+') as scorefile:
-                json.dump(scores, scorefile)
-        except Exception, e:
-            bot.say('Error saving UNO score file: %s' % e)
+        with lock:
+            scores = self.getScores(bot)
+            winner = string(winner)
+            for pl in players:
+                pl = string(pl)
+                if pl not in scores:
+                    scores[pl] = {'games': 0, 'wins': 0, 'points': 0, 'playtime': 0}
+                scores[pl]['games'] += 1
+                scores[pl]['playtime'] += time
+            scores[winner]['wins'] += 1
+            scores[winner]['points'] += score
+            try:
+                with open(self.scoreFile, 'w+') as scorefile:
+                    json.dump(scores, scorefile)
+            except Exception, e:
+                bot.say('Error saving UNO score file: %s' % e)
 
     def getScores(self, bot):
         scores = {}
@@ -548,38 +562,40 @@ class UnoBot:
         return scores
 
     def loadScores(self):
-        try:
-            with open(self.scoreFile, 'r+') as scorefile:
-                scores = json.load(scorefile)
-        except:
-            pass
+        with lock:
+            try:
+                with open(self.scoreFile, 'r+') as scorefile:
+                    scores = json.load(scorefile)
+            except:
+                pass
         return scores or {}
 
     def convertScorefile(self, bot):
         scores = {}
-        try:
-            with open(self.scoreFile, 'r+') as scorefile:
-                for line in scorefile:
-                    tokens = line.replace('\n', '').split(' ')
-                    if len(tokens) < 4: continue
-                    if len(tokens) == 4: tokens.append(0)
-                    scores[tools.Identifier(tokens[0])] = {
-                        'games'   : int(tokens[1]),
-                        'wins'    : int(tokens[2]),
-                        'points'  : int(tokens[3]),
-                        'playtime': int(tokens[4]),
-                    }
-        except Exception, e:
-            bot.say('Score conversion error: %s' % e)
-        else:
-            bot.say('Converted UNO score file to new JSON format.')
-        try:
-            with open(self.scoreFile, 'w+') as scorefile:
-                json.dump(scores, scorefile)
-        except Exception, e:
-            bot.say('Error converting UNO score file: %s' % e)
-        else:
-            bot.say('Wrote UNO score file in new JSON format.')
+        with lock:
+            try:
+                with open(self.scoreFile, 'r+') as scorefile:
+                    for line in scorefile:
+                        tokens = line.replace('\n', '').split(' ')
+                        if len(tokens) < 4: continue
+                        if len(tokens) == 4: tokens.append(0)
+                        scores[tools.Identifier(tokens[0])] = {
+                            'games'   : int(tokens[1]),
+                            'wins'    : int(tokens[2]),
+                            'points'  : int(tokens[3]),
+                            'playtime': int(tokens[4]),
+                        }
+            except Exception, e:
+                bot.say('Score conversion error: %s' % e)
+            else:
+                bot.say('Converted UNO score file to new JSON format.')
+            try:
+                with open(self.scoreFile, 'w+') as scorefile:
+                    json.dump(scores, scorefile)
+            except Exception, e:
+                bot.say('Error converting UNO score file: %s' % e)
+            else:
+                bot.say('Wrote UNO score file in new JSON format.')
 
 
 unobot = UnoBot()
