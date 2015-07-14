@@ -39,3 +39,6 @@ This fork includes (but is not limited to including) the following updates:
 * Updated syntax to take advantage of new bot framework features.
   * For example, the bot no longer fails to recognize `play` commands that
     contain extra whitespace between the arguments.
+
+## Licensing
+Simplified BSD for now. See the LICENSE.md file.
