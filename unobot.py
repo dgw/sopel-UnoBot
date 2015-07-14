@@ -382,12 +382,16 @@ class UnoGame:
                     self.owner = self.playerOrder[0]
                     if len(self.players) > 1:
                         bot.say(STRINGS['OWNER_LEFT'] % self.owner)
-                if self.way < 0 and pl < self.currentPlayer:
+                if self.way < 0 and pl <= self.currentPlayer:
                     self.incPlayer()
                 elif pl < self.currentPlayer:
                     self.way *= -1
                     self.incPlayer()
                     self.way *= -1
+                if self.currentPlayer >= len(self.playerOrder):
+                    self.currentPlayer = 0
+                if self.currentPlayer < 0:
+                    self.currentPlayer = len(self.playerOrder) - 1
                 if len(self.players) > 1:
                     self.showOnTurn(bot)
                 else:
