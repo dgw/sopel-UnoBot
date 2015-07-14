@@ -530,8 +530,8 @@ class UnoBot:
         scores[winner]['wins'] += 1
         scores[winner]['points'] += score
         try:
-            scorefile = open(self.scoreFile, 'w')
-            json.dump(scores, scorefile)
+            with open(self.scoreFile, 'w+') as scorefile:
+                json.dump(scores, scorefile)
         except Exception, e:
             bot.say('Error saving UNO score file: %s' % e)
 
@@ -548,38 +548,36 @@ class UnoBot:
         return scores
 
     def loadScores(self):
-        scorefile = open(self.scoreFile, 'r')
-        scores = json.load(scorefile)
-        scorefile.close()
+        try:
+            with open(self.scoreFile, 'r+') as scorefile:
+                scores = json.load(scorefile)
+        except:
+            pass
         return scores or {}
 
     def convertScorefile(self, bot):
         scores = {}
         try:
-            scorefile = open(self.scoreFile, 'r')
-            for line in scorefile:
-                tokens = line.replace('\n', '').split(' ')
-                if len(tokens) < 4: continue
-                if len(tokens) == 4: tokens.append(0)
-                scores[tools.Identifier(tokens[0])] = {
-                    'games'   : int(tokens[1]),
-                    'wins'    : int(tokens[2]),
-                    'points'  : int(tokens[3]),
-                    'playtime': int(tokens[4]),
-                }
-            scorefile.close()
+            with open(self.scoreFile, 'r+') as scorefile:
+                for line in scorefile:
+                    tokens = line.replace('\n', '').split(' ')
+                    if len(tokens) < 4: continue
+                    if len(tokens) == 4: tokens.append(0)
+                    scores[tools.Identifier(tokens[0])] = {
+                        'games'   : int(tokens[1]),
+                        'wins'    : int(tokens[2]),
+                        'points'  : int(tokens[3]),
+                        'playtime': int(tokens[4]),
+                    }
         except Exception, e:
             bot.say('Score conversion error: %s' % e)
-            pass
         else:
             bot.say('Converted UNO score file to new JSON format.')
         try:
-            scorefile = open(self.scoreFile, 'w')
-            json.dump(scores, scorefile)
-            scorefile.close()
+            with open(self.scoreFile, 'w+') as scorefile:
+                json.dump(scores, scorefile)
         except Exception, e:
             bot.say('Error converting UNO score file: %s' % e)
-            pass
         else:
             bot.say('Wrote UNO score file in new JSON format.')
 
