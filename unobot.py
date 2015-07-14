@@ -47,6 +47,7 @@ STRINGS = {
     'GAME_STOPPED'   : 'Game stopped.',
     'CANT_STOP'      : '%s is the game owner, you can\'t stop it!',
     'DEALING_IN'     : 'Dealing %s into the game as player #%s!',
+    'DEALING_BACK'   : 'Here, %s, I saved your cards. You\'re back in the game as player #%s.',
     'JOINED'         : 'Dealing %s into the game as player #%s!',
     'ENOUGH'         : 'There are enough players to deal now.',
     'NOT_STARTED'    : 'Game not started.',
@@ -92,6 +93,7 @@ class UnoGame:
         self.channel = trigger.sender
         self.deck = []
         self.players = {self.owner: []}
+        self.deadPlayers = {}
         self.playerOrder = [self.owner]
         self.currentPlayer = 0
         self.topCard = None
@@ -105,6 +107,12 @@ class UnoGame:
             self.players[trigger.nick] = []
             self.playerOrder.append(trigger.nick)
             if self.deck:
+                if trigger.nick in self.deadPlayers:
+                    self.players[trigger.nick] = self.deadPlayers.pop(trigger.nick)
+                    bot.say(STRINGS['DEALING_BACK'] % (
+                        trigger.nick, self.playerOrder.index(trigger.nick) + 1
+                    ))
+                    return
                 for i in xrange(0, 7):
                     self.players[trigger.nick].append(self.getCard())
                 bot.say(STRINGS['DEALING_IN'] % (
@@ -354,7 +362,7 @@ class UnoGame:
         if player not in self.players:
             return
         pl = self.playerOrder.index(player)
-        del self.players[player]
+        self.deadPlayers[player] = self.players.pop(player)
         self.playerOrder.remove(player)
         if self.startTime:
             if player == self.owner:
