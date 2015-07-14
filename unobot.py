@@ -38,8 +38,9 @@ from datetime import datetime, timedelta
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
 
-YES = True
+YES = WIN = True
 NO = False
+
 STRINGS = {
     'ALREADY_STARTED': 'Game already started by %s! Type join to join!',
     'GAME_STARTED'   : 'IRC-UNO started by %s - Type join to join!',
@@ -168,7 +169,7 @@ class UnoGame:
         if len(self.players[self.playerOrder[pl]]) == 1:
             bot.say(STRINGS['UNO'] % self.playerOrder[pl])
         elif len(self.players[self.playerOrder[pl]]) == 0:
-            return 'WIN'
+            return WIN
 
         self.showOnTurn(bot)
 
@@ -367,7 +368,7 @@ class UnoBot:
             return
         game = self.games[trigger.sender]
         winner = game.currentPlayer
-        if game.play(bot, trigger) == 'WIN':
+        if game.play(bot, trigger) == WIN:
             winner = game.playerOrder[winner]
             game_duration = datetime.now() - game.startTime
             hours, remainder = divmod(game_duration.seconds, 3600)
