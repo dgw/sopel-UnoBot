@@ -1,12 +1,18 @@
+# Code Licenses
+## This project
+
 unobot.py and associated files copyright 2015 dgw. All rights reserved.
 
-This project is distributed under the terms of the original license (known as the
-Simplified BSD or BSD 2-clause license) reproduced below until such time as a new
-license is chosen by the maintainer.
+Parts of this project covered under the terms of the original license (known as the
+Simplified BSD or BSD 2-clause license, reproduced below) continue to be distributed
+under the terms of that license. However, this derived work has not yet been licensed.
+As no other license applies, the usual copyright restrictions are in effect until
+such time as the author determines what license to use.
 
-----
+## Original project
+Original code from a FreeBSD-licensed project by Tamas Marki. Original license follows.
 
-Original code copyright 2010 Tamas Marki. All rights reserved.
+Copyright 2010 Tamas Marki. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are
 permitted provided that the following conditions are met:
