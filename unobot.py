@@ -213,7 +213,8 @@ class UnoGame:
             self.drawn = YES
             c = self.get_card()
             self.players[self.playerOrder[self.currentPlayer]].append(c)
-        bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards([c]), trigger.nick)
+        bot.notice(STRINGS['DRAWN_CARD']
+                   % self.render_cards([c], UnoBot.get_card_theme(bot, trigger.nick)), trigger.nick)
 
     def pass_(self, bot, trigger):
         if not self.deck:
@@ -234,13 +235,14 @@ class UnoGame:
     def show_on_turn(self, bot):
         with lock:
             pl = self.playerOrder[self.currentPlayer]
-            bot.say(STRINGS['TOP_CARD'] % (pl, self.render_cards([self.topCard])))
+            bot.say(STRINGS['TOP_CARD'] % (pl, self.render_cards([self.topCard], UnoBot.get_card_theme(bot, pl))))
             self.send_cards(bot, self.playerOrder[self.currentPlayer])
             self.send_next(bot)
 
     def send_cards(self, bot, who):
         cards = self.players[who]
-        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.render_cards(cards)), who)
+        bot.notice(STRINGS['YOUR_CARDS']
+                   % (len(cards), self.render_cards(cards, UnoBot.get_card_theme(bot, who))), who)
 
     def send_next(self, bot):
         with lock:
@@ -328,16 +330,16 @@ class UnoGame:
             if 'D2' in card:
                 bot.say(STRINGS['D2'] % self.playerOrder[self.currentPlayer])
                 z = [self.get_card(), self.get_card()]
-                bot.notice(STRINGS['CARDS'] % self.render_cards(z),
-                           self.playerOrder[self.currentPlayer])
+                bot.notice(STRINGS['CARDS'] % self.render_cards(z, UnoBot.get_card_theme(bot, self.playerOrder[
+                    self.currentPlayer])), self.playerOrder[self.currentPlayer])
                 self.players[self.playerOrder[self.currentPlayer]].extend(z)
                 self.inc_player()
             elif 'WD4' in card:
                 bot.say(STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
                 z = [self.get_card(), self.get_card(), self.get_card(),
                      self.get_card()]
-                bot.notice(STRINGS['CARDS'] % self.render_cards(z),
-                           self.playerOrder[self.currentPlayer])
+                bot.notice(STRINGS['CARDS'] % self.render_cards(z, UnoBot.get_card_theme(bot, self.playerOrder[
+                    self.currentPlayer])), self.playerOrder[self.currentPlayer])
                 self.players[self.playerOrder[self.currentPlayer]].extend(z)
                 self.inc_player()
             elif 'S' in card:
@@ -630,9 +632,8 @@ class UnoBot:
     def set_card_theme(bot, trigger):
         theme = trigger.group(3) or None
         if not theme:
-            theme = bot.db.get_nick_value(trigger.nick, 'uno_theme') or THEME_NONE
-            theme = THEME_NAMES[theme]
-            bot.say(STRINGS['THEME_CURRENT'] % theme)
+            theme = UnoBot.get_card_theme(bot, trigger.nick)
+            bot.say(STRINGS['THEME_CURRENT'] % THEME_NAMES[theme])
             return
         theme = theme.lower()
         if theme not in THEMES:
@@ -640,6 +641,10 @@ class UnoBot:
             return
         bot.db.set_nick_value(trigger.nick, 'uno_theme', THEMES[theme])
         bot.say(STRINGS['THEME_SET'] % (trigger.nick, theme))
+
+    @staticmethod
+    def get_card_theme(bot, nick):
+        return bot.db.get_nick_value(tools.Identifier(nick), 'uno_theme') or THEME_NONE
 
 
 unobot = UnoBot()
