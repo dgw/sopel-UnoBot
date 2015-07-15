@@ -42,7 +42,8 @@ STRINGS = {
     'DRAW_FIRST':      "You have to draw first.",
     'PASSED':          "%s passed!",
     'NO_SCORES':       "No scores yet",
-    'YOUR_RANK':       "You are ranked #%d by total score.",
+    'YOUR_RANK':       "%s is ranked #%d with %d accumulated UNO points.",
+    'NOT_RANKED':      "%s hasn't finished an UNO game, and thus has no rank yet.",
     'SCORE_ROW':       "#%s %s (%s points %s games, %s won, %s wasted)",
     'TOP_CARD':        "%s's turn. Top Card: %s",
     'YOUR_CARDS':      "Your cards (%d): %s",
@@ -494,23 +495,29 @@ class UnoBot:
         game = self.games[trigger.sender]
         game.send_counts(bot)
 
-    def top_scores(self, bot, trigger):
+    def rankings(self, bot, trigger, toplist=NO):
         scores = self.get_scores(bot)
         if not scores:
             bot.say(STRINGS['NO_SCORES'])
             return
         order = sorted(scores.keys(), key=lambda k: scores[k]['points'], reverse=YES)
-        rank = order.index(trigger.nick) + 1
-        if not rank <= 5:
-            bot.notice(STRINGS['YOUR_RANK'] % rank, trigger.nick)
-        i = 1
-        for player in order[:5]:
-            if not scores[player]['points']:
-                break  # nobody else has any points; stop printing
-            bot.say(STRINGS['SCORE_ROW'] %
-                    (i, player, scores[player]['points'], scores[player]['games'], scores[player]['wins'],
-                     timedelta(seconds=int(scores[player]['playtime']))))
-            i += 1
+        if toplist:
+            i = 1
+            for player in order[:5]:
+                if not scores[player]['points']:
+                    break  # nobody else has any points; stop printing
+                bot.say(STRINGS['SCORE_ROW'] %
+                        (i, player, scores[player]['points'], scores[player]['games'], scores[player]['wins'],
+                         timedelta(seconds=int(scores[player]['playtime']))))
+                i += 1
+        else:
+            player = trigger.group(3) or trigger.nick
+            try:
+                rank = order.index(player) + 1
+            except ValueError:
+                bot.say(STRINGS['NOT_RANKED'] % player)
+                return
+            bot.say(STRINGS['YOUR_RANK'] % (player, rank, scores[player]['points']))
 
     def game_ended(self, bot, trigger, winner):
         with lock:
@@ -732,7 +739,18 @@ def unotop(bot, trigger):
     """
     Shows the top 5 players by score. Unlike most UNO commands, can be sent in a PM.
     """
-    unobot.top_scores(bot, trigger)
+    unobot.rankings(bot, trigger, YES)
+
+
+@module.commands('unorank')
+@module.example(".unorank")
+@module.example(".unorank UnoAddict")
+@module.priority('high')
+def unorank(bot, trigger):
+    """
+    Shows the ranking, by accumulated UNO points, of the calling player or the specified nick.
+    """
+    unobot.rankings(bot, trigger, NO)
 
 
 @module.commands('unogames')
