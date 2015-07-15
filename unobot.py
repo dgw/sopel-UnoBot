@@ -4,6 +4,7 @@ This file is covered under the project license, located in LICENSE.md
 
 import willie.module as module
 import willie.tools as tools
+from willie.formatting import colors, CONTROL_BOLD, CONTROL_COLOR, CONTROL_NORMAL
 import json
 import random
 import threading
@@ -281,21 +282,24 @@ class UnoGame:
 
     @staticmethod
     def render_cards(cards, theme=THEME_NONE):
-        card_tmpl = '\x03%s%s[%s]'
+        card_tmpl = CONTROL_COLOR + '%s%s[%s]'
         background = ''
-        blue_code = '12'
-        green_code = '09'
-        red_code = '04'
-        yellow_code = '08'
-        wild_code = '01'
+        bold = ''
+        blue_code = colors.LIGHT_BLUE
+        green_code = colors.LIGHT_GREEN
+        red_code = colors.RED
+        yellow_code = colors.YELLOW
+        wild_code = colors.BLACK
         if theme:
             if theme == THEME_DARK:
-                background = ',01'
-                blue_code = '10'
-                wild_code = '00'
+                background = ',' + colors.BLACK
+                bold = CONTROL_BOLD
+                wild_code = colors.LIGHT_GREY
             elif theme == THEME_LIGHT:
-                background = ',00'
-                yellow_code = '07'
+                background = ',' + colors.LIGHT_GREY
+                bold = CONTROL_BOLD
+                green_code = colors.GREEN
+                yellow_code = colors.ORANGE
         ret = []
         for card in sorted(cards):
             if card in ['W', 'WD4']:
@@ -314,7 +318,7 @@ class UnoGame:
                 color_code = yellow_code
             t = card_tmpl % (color_code, background, card[1:])
             ret.append(t)
-        return ''.join(ret) + '\x03'
+        return bold + ''.join(ret) + CONTROL_NORMAL
 
     def card_playable(self, card):
         if 'W' in card and card[0] in CARD_COLORS:
