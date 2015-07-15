@@ -104,6 +104,8 @@ class UnoGame:
 
     def quit(self, bot, trigger):
         player = trigger.nick
+        if player not in self.players:
+            return
         playernum = self.playerOrder.index(player) + 1
         bot.say(STRINGS['PLAYER_QUIT'] % (player, playernum))
         return self.remove_player(bot, player)
@@ -113,6 +115,8 @@ class UnoGame:
             bot.say(STRINGS['CANT_KICK'] % self.owner)
             return
         player = tools.Identifier(trigger.group(3))
+        if player not in self.players:
+            return
         if player == trigger.nick:
             return self.quit(bot, trigger)
         playernum = self.playerOrder.index(player) + 1
