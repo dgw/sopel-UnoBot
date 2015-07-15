@@ -13,9 +13,16 @@ SCOREFILE = "/var/lib/willie/unoscores.txt"
 
 YES = WIN = STOP = True
 NO = False
+
 THEME_NONE = 0
 THEME_DARK = 1
 THEME_LIGHT = 2
+THEMES = {
+    'default': THEME_NONE,
+    'dark':    THEME_DARK,
+    'light':   THEME_LIGHT,
+}
+THEME_NAMES = dict((v, n) for (n, v) in THEMES.items())
 
 lock = threading.RLock()
 
@@ -61,6 +68,9 @@ STRINGS = {
     'OWNER_LEFT':      "Game owner left! New owner: %s",
     'CANT_KICK':       "Only %s or a bot admin can kick players from the game.",
     'CANT_CONTINUE':   "You need at least two people to play UNO. RIP.",
+    'THEME_CURRENT':   "You are currently using the %s card theme.",
+    'THEME_NEEDED':    "You must specify one of the available themes: %s",
+    'THEME_SET':       "Set %s to use the %s card theme.",
 }  # yapf: disable
 COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
@@ -616,6 +626,21 @@ class UnoBot:
             else:
                 bot.say("Wrote UNO score file in new JSON format.")
 
+    @staticmethod
+    def set_card_theme(bot, trigger):
+        theme = trigger.group(3) or None
+        if not theme:
+            theme = bot.db.get_nick_value(trigger.nick, 'uno_theme') or THEME_NONE
+            theme = THEME_NAMES[theme]
+            bot.say(STRINGS['THEME_CURRENT'] % theme)
+            return
+        theme = theme.lower()
+        if theme not in THEMES:
+            bot.say(STRINGS['THEME_NEEDED'] % ', '.join(THEMES.keys()))
+            return
+        bot.db.set_nick_value(trigger.nick, 'uno_theme', THEMES[theme])
+        bot.say(STRINGS['THEME_SET'] % (trigger.nick, theme))
+
 
 unobot = UnoBot()
 
@@ -713,6 +738,16 @@ def unocounts(bot, trigger):
     unobot.send_counts(bot, trigger)
 
 
+@module.commands('unotheme')
+@module.example(".unotheme dark")
+@module.priority('high')
+def unotheme(bot, trigger):
+    """
+    Sets your UNO card theme to have a dark/light background. Clear your theme setting with "default".
+    """
+    UnoBot.set_card_theme(bot, trigger)
+
+
 @module.commands('unohelp')
 @module.example(".unohelp")
 @module.priority('high')
@@ -731,6 +766,8 @@ def unohelp(bot, trigger):
                " (where c = the color you wish to change the discard pile to)." % p, r)
     bot.notice("If you cannot play a card on your turn, you must %sdraw. If that card is not "
                "playable, you must %spass (forfeiting your turn)." % (p, p), r)
+    bot.notice("Use %sunotheme (dark|light) if you are having trouble reading your cards to give them a "
+               "dark/light background color, respectively. Use %sunotheme default to reset it." % (p, p))
 
 
 @module.commands('unotop')
