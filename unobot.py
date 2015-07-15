@@ -605,6 +605,7 @@ class UnoBot:
                         }
             except Exception, e:
                 bot.say("Score conversion error: %s" % e)
+                return
             else:
                 bot.say("Converted UNO score file to new JSON format.")
             try:
