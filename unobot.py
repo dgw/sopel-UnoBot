@@ -399,6 +399,8 @@ class UnoGame:
                     self.owner = self.playerOrder[0]
                     if len(self.players) > 1:
                         bot.say(STRINGS['OWNER_LEFT'] % self.owner)
+                    else:
+                        return STOP
                 if self.way < 0 and pl <= self.currentPlayer:
                     self.inc_player()
                 elif pl < self.currentPlayer:
@@ -432,10 +434,10 @@ class UnoBot:
             self.games[trigger.sender] = UnoGame(trigger)
             bot.say(STRINGS['GAME_STARTED'] % self.games[trigger.sender].owner)
 
-    def stop(self, bot, trigger):
+    def stop(self, bot, trigger, forced=NO):
         if trigger.sender in self.games:
             game = self.games[trigger.sender]
-            if trigger.nick == game.owner or trigger.admin:
+            if trigger.nick == game.owner or trigger.admin or forced:
                 bot.say(STRINGS['GAME_STOPPED'])
                 del self.games[trigger.sender]
             else:
@@ -454,7 +456,7 @@ class UnoBot:
             game = self.games[trigger.sender]
             if game.quit(bot, trigger) == STOP:
                 bot.say(STRINGS['CANT_CONTINUE'])
-                self.stop(bot, trigger)
+                self.stop(bot, trigger, forced=YES)
         else:
             return
 
@@ -463,7 +465,7 @@ class UnoBot:
             game = self.games[trigger.sender]
             if game.kick(bot, trigger) == STOP:
                 bot.say(STRINGS['CANT_CONTINUE'])
-                self.stop(bot, trigger)
+                self.stop(bot, trigger, forced=YES)
         else:
             return
 
