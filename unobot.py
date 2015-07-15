@@ -13,6 +13,9 @@ SCOREFILE = "/var/lib/willie/unoscores.txt"
 
 YES = WIN = STOP = True
 NO = False
+THEME_NONE = 0
+THEME_DARK = 1
+THEME_LIGHT = 2
 
 lock = threading.RLock()
 
@@ -264,26 +267,41 @@ class UnoGame:
         return ' - '.join(arr)
 
     @staticmethod
-    def render_cards(cards):
+    def render_cards(cards, theme=THEME_NONE):
+        card_tmpl = '\x03%s%s[%s]'
+        background = ''
+        blue_code = '12'
+        green_code = '09'
+        red_code = '04'
+        yellow_code = '08'
+        wild_code = '01'
+        if theme:
+            if theme == THEME_DARK:
+                background = ',01'
+                blue_code = '10'
+                wild_code = '00'
+            elif theme == THEME_LIGHT:
+                background = ',00'
+                yellow_code = '07'
         ret = []
-        for c in sorted(cards):
-            if c in ['W', 'WD4']:
-                ret.append('\x0301[' + c + ']')
+        for card in sorted(cards):
+            if card in ['W', 'WD4']:
+                ret.append(card_tmpl % (wild_code, background, card))
                 continue
-            if 'W' in c:
-                c = c[0] + '*'
-            t = '\x0300\x03'
-            if c[0] == 'B':
-                t += '12['
-            if c[0] == 'Y':
-                t += '08['
-            if c[0] == 'G':
-                t += '09['
-            if c[0] == 'R':
-                t += '04['
-            t += c[1:] + ']\x03'
+            if 'W' in card:
+                card = card[0] + '*'
+            color_code = ''
+            if card[0] == 'B':
+                color_code = blue_code
+            if card[0] == 'G':
+                color_code = green_code
+            if card[0] == 'R':
+                color_code = red_code
+            if card[0] == 'Y':
+                color_code = yellow_code
+            t = card_tmpl % (color_code, background, card[1:])
             ret.append(t)
-        return ''.join(ret)
+        return ''.join(ret) + '\x03'
 
     def card_playable(self, card):
         if 'W' in card and card[0] in CARD_COLORS:
