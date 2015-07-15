@@ -233,7 +233,10 @@ class UnoGame:
             bot.notice(STRINGS['NEXT_START'] + self.render_counts(), self.playerOrder[self.currentPlayer])
 
     def send_counts(self, bot):
-        bot.say(STRINGS['SB_START'] + self.render_counts(YES))
+        if self.startTime:
+            bot.say(STRINGS['SB_START'] + self.render_counts(YES))
+        else:
+            bot.say(STRINGS['NOT_STARTED'])
 
     def render_counts(self, full=NO):
         with lock:
