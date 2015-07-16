@@ -72,6 +72,17 @@ STRINGS = {
     'THEME_CURRENT':   "You are currently using the %s card theme.",
     'THEME_NEEDED':    "You must specify one of the available themes: %s",
     'THEME_SET':       "Set %s to use the %s card theme.",
+    'HELP_INTRO':      "I am sending you UNO help privately. If you do not see it, configure your client to show "
+                       "non-server notices in the current channel. Cards are sent the same way during game-play.",
+    'HELP_LINES':      ["UNO is played using the %pplay, %pdraw, and %ppass commands.",
+                        "To play a card, say %pplay c f (where c = r/g/b/y and f = the card's face value). e.g. "
+                        "%pplay r 2 to play a red 2 or %pplay b d2 to play a blue D2.",
+                        "Wild (W) and Wild Draw 4 (WD4) cards are played as %pplay w[d4] c (where c = the color you "
+                        "wish to change the discard pile to).",
+                        "If you cannot play a card on your turn, you must %pdraw. If that card is not playable, you "
+                        "must %ppass (forfeiting your turn).",
+                        "Use %punotheme (dark|light) if you are having trouble reading your cards to give them a "
+                        "dark/light background color, respectively. Use %punotheme default to reset it."]
 }  # yapf: disable
 COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
@@ -770,17 +781,9 @@ def unohelp(bot, trigger):
     """
     p = bot.config.core.help_prefix
     r = trigger.nick
-    bot.reply("I am sending you UNO help privately. If you do not see it, configure your client to show "
-              "non-server notices in the current channel. Cards are sent the same way during game-play.")
-    bot.notice("UNO is played using the %splay, %sdraw, and %spass commands." % (p, p, p), r)
-    bot.notice("To play a card, say %splay c f (where c = r/g/b/y and f = the card's face value)."
-               " e.g. %splay r 2 to play a red 2 or %splay b d2 to play a blue D2." % (p, p, p), r)
-    bot.notice("Wild (W) and Wild Draw 4 (WD4) cards are played as %splay w[d4] c"
-               " (where c = the color you wish to change the discard pile to)." % p, r)
-    bot.notice("If you cannot play a card on your turn, you must %sdraw. If that card is not "
-               "playable, you must %spass (forfeiting your turn)." % (p, p), r)
-    bot.notice("Use %sunotheme (dark|light) if you are having trouble reading your cards to give them a "
-               "dark/light background color, respectively. Use %sunotheme default to reset it." % (p, p), r)
+    bot.reply(STRINGS['HELP_INTRO'])
+    for line in STRINGS['HELP_LINES']:
+        bot.notice(line.replace('%p', p), trigger.nick)
 
 
 @module.commands('unotop')
@@ -822,11 +825,11 @@ def unogames(bot, trigger):
     if not len(chans):
         bot.say('No UNO games in progress, %s.' % trigger.nick)
         return
-    g_active = 'channel' if active == 1 else 'channels'
-    g_pending = 'channel' if pending == 1 else 'channels'
+    g_active = "channel" if active == 1 else "channels"
+    g_pending = "channel" if pending == 1 else "channels"
     chanlist = ", ".join(chans[:-2] + [" and ".join(chans[-2:])])
     bot.reply(
-        'UNO is pending deal in %d %s and in progress in %d %s: %s.' % (pending, g_pending, active, g_active, chanlist))
+        "UNO is pending deal in %d %s and in progress in %d %s: %s." % (pending, g_pending, active, g_active, chanlist))
 
 
 if __name__ == '__main__':
