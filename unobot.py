@@ -778,7 +778,7 @@ def unohelp(bot, trigger):
     bot.notice("If you cannot play a card on your turn, you must %sdraw. If that card is not "
                "playable, you must %spass (forfeiting your turn)." % (p, p), r)
     bot.notice("Use %sunotheme (dark|light) if you are having trouble reading your cards to give them a "
-               "dark/light background color, respectively. Use %sunotheme default to reset it." % (p, p))
+               "dark/light background color, respectively. Use %sunotheme default to reset it." % (p, p), r)
 
 
 @module.commands('unotop')
