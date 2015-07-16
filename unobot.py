@@ -52,7 +52,7 @@ STRINGS = {
     'NO_SCORES':       "No scores yet",
     'YOUR_RANK':       "%s is ranked #%d with %d accumulated UNO points.",
     'NOT_RANKED':      "%s hasn't finished an UNO game, and thus has no rank yet.",
-    'SCORE_ROW':       "#%s %s (%s points %s games, %s won, %s wasted)",
+    'SCORE_ROW':       "#%s %s (%d %s in %d %s (%d won), %s wasted)",
     'TOP_CARD':        "%s's turn. Top Card: %s",
     'YOUR_CARDS':      "Your cards (%d): %s",
     'NEXT_START':      "Next: ",
@@ -524,9 +524,11 @@ class UnoBot:
             for player in order[:5]:
                 if not scores[player]['points']:
                     break  # nobody else has any points; stop printing
+                g_points = "point" if scores[player]['points'] == 1 else "points"
+                g_games = "game" if scores[player]['games'] == 1 else "games"
                 bot.say(STRINGS['SCORE_ROW'] %
-                        (i, player, scores[player]['points'], scores[player]['games'], scores[player]['wins'],
-                         timedelta(seconds=int(scores[player]['playtime']))))
+                        (i, player, scores[player]['points'], g_points, scores[player]['games'], g_games,
+                         scores[player]['wins'], timedelta(seconds=int(scores[player]['playtime']))))
                 i += 1
         else:
             player = trigger.group(3) or trigger.nick
