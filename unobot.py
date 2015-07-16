@@ -806,17 +806,25 @@ def unorank(bot, trigger):
 @module.priority('high')
 @module.require_admin
 def unogames(bot, trigger):
-    games = []
+    chans = []
+    active = 0
+    pending = 0
     with lock:
-        for game in unobot.games.keys():
-            games.append(game)
-    if not len(games):
+        for chan in unobot.games.keys():
+            if unobot.games[chan].startTime:
+                chans.append(chan)
+                active += 1
+            else:
+                chans.append(chan + " (pending)")
+                pending += 1
+    if not len(chans):
         bot.say('No UNO games in progress, %s.' % trigger.nick)
         return
-    chancount = len(games)
-    chans = 'channel' if chancount == 1 else 'channels'
-    chanlist = ", ".join(games[:-2] + [" and ".join(games[-2:])])
-    bot.say('%s, UNO is in progress in %d %s: %s.' % (trigger.nick, chancount, chans, chanlist))
+    g_active = 'channel' if active == 1 else 'channels'
+    g_pending = 'channel' if pending == 1 else 'channels'
+    chanlist = ", ".join(chans[:-2] + [" and ".join(chans[-2:])])
+    bot.reply(
+        'UNO is pending deal in %d %s and in progress in %d %s: %s.' % (pending, g_pending, active, g_active, chanlist))
 
 
 if __name__ == '__main__':
