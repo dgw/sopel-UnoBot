@@ -7,8 +7,14 @@ import willie.tools as tools
 from willie.formatting import colors, CONTROL_BOLD, CONTROL_COLOR, CONTROL_NORMAL
 import json
 import random
+import sys
 import threading
 from datetime import datetime, timedelta
+
+# niceties for Python 2 / 3 compatibility
+if sys.version_info.major < 3:
+    range = xrange
+    str = unicode
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
 
@@ -116,7 +122,7 @@ class UnoGame:
                         trigger.nick, self.playerOrder.index(trigger.nick) + 1
                     ))
                     return
-                for i in xrange(0, 7):
+                for i in range(0, 7):
                     self.players[trigger.nick].append(self.get_card())
                 bot.say(STRINGS['DEALING_IN'] % (
                     trigger.nick, self.playerOrder.index(trigger.nick) + 1
@@ -162,7 +168,7 @@ class UnoGame:
         with lock:
             self.startTime = datetime.now()
             self.deck = self.create_deck()
-            for i in xrange(0, 7):
+            for i in range(0, 7):
                 for p in self.players:
                     self.players[p].append(self.get_card())
             self.topCard = self.get_card()
@@ -572,16 +578,11 @@ class UnoBot:
             del self.games[trigger.sender]
 
     def update_scores(self, bot, players, winner, score, time):
-        import sys
-        if sys.version_info.major < 3:
-            string = unicode
-        else:
-            string = str
         with lock:
             scores = self.get_scores(bot)
-            winner = string(winner)
+            winner = str(winner)
             for pl in players:
-                pl = string(pl)
+                pl = str(pl)
                 if pl not in scores:
                     scores[pl] = {'games': 0, 'wins': 0, 'points': 0, 'playtime': 0}
                 scores[pl]['games'] += 1
