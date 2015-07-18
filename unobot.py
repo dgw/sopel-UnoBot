@@ -449,7 +449,8 @@ class UnoBot:
         if trigger.sender in self.games:
             game = self.games[trigger.sender]
             if trigger.nick == game.owner or trigger.admin or forced:
-                bot.say(STRINGS['GAME_STOPPED'])
+                if not forced:
+                    bot.say(STRINGS['GAME_STOPPED'])
                 del self.games[trigger.sender]
             else:
                 bot.say(STRINGS['CANT_STOP'] % game.owner)
