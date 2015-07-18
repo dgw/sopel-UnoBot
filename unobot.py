@@ -50,7 +50,7 @@ STRINGS = {
     'DRAW_FIRST':      "You have to draw first.",
     'PASSED':          "%s passed!",
     'NO_SCORES':       "No scores yet",
-    'YOUR_RANK':       "%s is ranked #%d with %d accumulated UNO points.",
+    'YOUR_RANK':       "%s is ranked #%d with %d accumulated UNO points from %d victories.",
     'NOT_RANKED':      "%s hasn't finished an UNO game, and thus has no rank yet.",
     'SCORE_ROW':       "#%s %s (%d %s in %d %s (%d won), %s wasted)",
     'TOP_CARD':        "%s's turn. Top Card: %s",
@@ -548,7 +548,7 @@ class UnoBot:
             except ValueError:
                 bot.say(STRINGS['NOT_RANKED'] % player)
                 return
-            bot.say(STRINGS['YOUR_RANK'] % (player, rank, scores[player]['points']))
+            bot.say(STRINGS['YOUR_RANK'] % (player, rank, scores[player]['points'], scores[player]['wins']))
 
     def game_ended(self, bot, trigger, winner):
         with lock:
