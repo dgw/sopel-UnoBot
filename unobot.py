@@ -88,7 +88,8 @@ STRINGS = {
                         "If you cannot play a card on your turn, you must %pdraw. If that card is not playable, you "
                         "must %ppass (forfeiting your turn).",
                         "Use %punotheme (dark|light) if you are having trouble reading your cards to give them a "
-                        "dark/light background color, respectively. Use %punotheme default to reset it."]
+                        "dark/light background color, respectively. Use %punotheme default to reset it."],
+    'PLAY_SYNTAX':      "Command syntax error. You must use e.g. %pplay r 3 or %pplay w y.",
 }  # yapf: disable
 COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
@@ -183,6 +184,9 @@ class UnoGame:
             return
         if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            return
+        if not trigger.group(3) or not trigger.group(4):
+            bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
             return
         color = trigger.group(3).upper()
         if color in CARD_COLORS:
