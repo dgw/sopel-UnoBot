@@ -63,7 +63,7 @@ STRINGS = {
     'YOUR_CARDS':      "Your cards (%d): %s",
     'NEXT_START':      "Next: ",
     'SB_START':        "Standings: ",
-    'SB_PLAYER':       "%s (%s cards)",
+    'SB_PLAYER':       "%s (%d %s)",
     'D2':              "%s draws two and is skipped!",
     'CARDS':           "Cards: %s",
     'WD4':             "%s draws four and is skipped!",
@@ -292,8 +292,9 @@ class UnoGame:
                     plr = len(self.players) - 1
             arr = []
             while plr != stop:
-                arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[plr], len(
-                    self.players[self.playerOrder[plr]])))
+                cards = len(self.players[self.playerOrder[plr]])
+                g_cards = "card" if cards == 1 else "cards"
+                arr.append(STRINGS['SB_PLAYER'] % (self.playerOrder[plr], cards, g_cards))
                 plr += inc
                 if plr == len(self.players) and not full:
                     plr = 0
