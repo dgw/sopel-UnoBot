@@ -105,9 +105,11 @@ class UnoGame:
         self.deadPlayers = {}
         self.playerOrder = [self.owner]
         self.currentPlayer = 0
+        self.previousPlayer = None
         self.topCard = None
         self.way = 1
         self.drawn = NO
+        self.unoCalled = NO
         self.deck = []
         self.startTime = None
 
@@ -220,6 +222,16 @@ class UnoGame:
             elif len(self.players[self.playerOrder[pl]]) == 0:
                 return WIN
             self.show_on_turn(bot)
+
+    def call_uno(self, bot, trigger):
+        caller = trigger.nick
+        with lock:
+            if len(self.players[caller]) != 1:
+                z = [self.get_card(), self.get_card()]
+                self.players[caller].extend(z)
+                bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(z, UnoBot.get_card_theme(bot, caller)), caller)
+            else:
+                self.unoCalled = caller
 
     def draw(self, bot, trigger):
         if not self.deck:
@@ -401,6 +413,7 @@ class UnoGame:
 
     def inc_player(self):
         with lock:
+            self.previousPlayer = self.currentPlayer
             self.currentPlayer += self.way
             if self.currentPlayer == len(self.players):
                 self.currentPlayer = 0
@@ -511,6 +524,11 @@ class UnoBot:
             game_duration = '%.2d:%.2d:%.2d' % (hours, minutes, seconds)
             bot.say(STRINGS['WIN'] % (winner, game_duration))
             self.game_ended(bot, trigger, winner)
+
+    def call_uno(self, bot, trigger):
+        if trigger.sender not in self.games:
+            return
+        self.games[trigger.sender].call_uno(bot, trigger)
 
     def draw(self, bot, trigger):
         if trigger.sender not in self.games:
@@ -731,6 +749,13 @@ def unodeal(bot, trigger):
 @module.require_chanmsg
 def unoplay(bot, trigger):
     unobot.play(bot, trigger)
+
+
+@module.rule('^uno!?$')
+@module.priority('high')
+@module.require_chanmsg
+def unocalled(bot, trigger):
+    unobot.call_uno(bot, trigger)
 
 
 @module.commands('draw')
