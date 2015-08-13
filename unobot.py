@@ -572,7 +572,7 @@ class UnoBot:
                          scores[player]['wins'], timedelta(seconds=int(scores[player]['playtime']))))
                 i += 1
         else:
-            player = trigger.group(3) or trigger.nick
+            player = str(trigger.group(3) or trigger.nick)
             try:
                 rank = order.index(player) + 1
             except ValueError:
