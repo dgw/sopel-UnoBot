@@ -17,6 +17,8 @@ if sys.version_info.major < 3:
     str = unicode
 
 SCOREFILE = "/var/lib/willie/unoscores.txt"
+DECK_SIZE = 7
+MINIMUM_HAND_FOR_JOIN = 5
 
 YES = WIN = STOP = True
 NO = False
@@ -41,6 +43,7 @@ STRINGS = {
     'DEALING_IN':      "Dealing %s into the game as player #%s!",
     'DEALING_BACK':    "Here, %s, I saved your cards. You're back in the game as player #%s.",
     'JOINED':          "Dealing %s into the game as player #%s!",
+    'CANT_JOIN':       "Can't join you to this game, %s. Wait for the next one.",
     'ENOUGH':          "There are enough players to deal now.",
     'NOT_STARTED':     "Game not started.",
     'NOT_ENOUGH':      "Not enough players to deal yet.",
@@ -109,12 +112,16 @@ class UnoGame:
         self.topCard = None
         self.way = 1
         self.drawn = NO
+        self.smallestHand = DECK_SIZE
         self.unoCalled = NO
         self.deck = []
         self.startTime = None
 
     def join(self, bot, trigger):
         if trigger.nick not in self.players:
+            if self.smallestHand < MINIMUM_HAND_FOR_JOIN:
+                bot.say(STRINGS['CANT_JOIN'] % trigger.nick)
+                return
             self.players[trigger.nick] = []
             with lock:
                 self.playerOrder.append(trigger.nick)
@@ -125,7 +132,7 @@ class UnoGame:
                         trigger.nick, self.playerOrder.index(trigger.nick) + 1
                     ))
                     return
-                for i in range(0, 7):
+                for i in range(0, DECK_SIZE):
                     self.players[trigger.nick].append(self.get_card())
                 bot.say(STRINGS['DEALING_IN'] % (
                     trigger.nick, self.playerOrder.index(trigger.nick) + 1
@@ -171,7 +178,7 @@ class UnoGame:
         with lock:
             self.startTime = datetime.now()
             self.deck = self.create_deck()
-            for i in range(0, 7):
+            for i in range(0, DECK_SIZE):
                 for p in self.players:
                     self.players[p].append(self.get_card())
             self.topCard = self.get_card()
@@ -213,6 +220,9 @@ class UnoGame:
                 return
             self.drawn = NO
             self.players[self.playerOrder[pl]].remove(searchcard)
+            hand_size = len(self.players[self.playerOrder[pl]])
+            if hand_size < self.smallestHand:
+                self.smallestHand = hand_size
 
             self.inc_player()
             self.card_played(bot, playcard)
