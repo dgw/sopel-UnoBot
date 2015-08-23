@@ -118,52 +118,54 @@ class UnoGame:
         self.startTime = None
 
     def join(self, bot, trigger):
-        if trigger.nick not in self.players:
-            if self.smallestHand < MINIMUM_HAND_FOR_JOIN:
-                bot.say(STRINGS['CANT_JOIN'] % trigger.nick)
-                return
-            self.players[trigger.nick] = []
-            with lock:
+        with lock:
+            if trigger.nick not in self.players:
+                if self.smallestHand < MINIMUM_HAND_FOR_JOIN:
+                    bot.say(STRINGS['CANT_JOIN'] % trigger.nick)
+                    return
+                self.players[trigger.nick] = []
                 self.playerOrder.append(trigger.nick)
-            if self.deck:
-                if trigger.nick in self.deadPlayers:
-                    self.players[trigger.nick] = self.deadPlayers.pop(trigger.nick)
-                    bot.say(STRINGS['DEALING_BACK'] % (
+                if self.deck:
+                    if trigger.nick in self.deadPlayers:
+                        self.players[trigger.nick] = self.deadPlayers.pop(trigger.nick)
+                        bot.say(STRINGS['DEALING_BACK'] % (
+                            trigger.nick, self.playerOrder.index(trigger.nick) + 1
+                        ))
+                        return
+                    for i in range(0, DECK_SIZE):
+                        self.players[trigger.nick].append(self.get_card())
+                    bot.say(STRINGS['DEALING_IN'] % (
                         trigger.nick, self.playerOrder.index(trigger.nick) + 1
                     ))
-                    return
-                for i in range(0, DECK_SIZE):
-                    self.players[trigger.nick].append(self.get_card())
-                bot.say(STRINGS['DEALING_IN'] % (
-                    trigger.nick, self.playerOrder.index(trigger.nick) + 1
-                ))
-            else:
-                bot.say(STRINGS['JOINED'] % (
-                    trigger.nick, self.playerOrder.index(trigger.nick) + 1
-                ))
-                if len(self.players) > 1:
-                    bot.notice(STRINGS['ENOUGH'], self.owner)
+                else:
+                    bot.say(STRINGS['JOINED'] % (
+                        trigger.nick, self.playerOrder.index(trigger.nick) + 1
+                    ))
+                    if len(self.players) > 1:
+                        bot.notice(STRINGS['ENOUGH'], self.owner)
 
     def quit(self, bot, trigger):
         player = trigger.nick
         if player not in self.players:
             return
-        playernum = self.playerOrder.index(player) + 1
-        bot.say(STRINGS['PLAYER_QUIT'] % (player, playernum))
-        return self.remove_player(bot, player)
+        with lock:
+            playernum = self.playerOrder.index(player) + 1
+            bot.say(STRINGS['PLAYER_QUIT'] % (player, playernum))
+            return self.remove_player(bot, player)
 
     def kick(self, bot, trigger):
         if trigger.nick != self.owner and not trigger.admin:
             bot.say(STRINGS['CANT_KICK'] % self.owner)
             return
         player = tools.Identifier(trigger.group(3))
-        if player not in self.players:
-            return
-        if player == trigger.nick:
-            return self.quit(bot, trigger)
-        playernum = self.playerOrder.index(player) + 1
-        bot.say(STRINGS['PLAYER_KICK'] % (player, playernum, trigger.nick))
-        return self.remove_player(bot, player)
+        with lock:
+            if player not in self.players:
+                return
+            if player == trigger.nick:
+                return self.quit(bot, trigger)
+            playernum = self.playerOrder.index(player) + 1
+            bot.say(STRINGS['PLAYER_KICK'] % (player, playernum, trigger.nick))
+            return self.remove_player(bot, player)
 
     def deal(self, bot, trigger):
         if len(self.players) < 2:
