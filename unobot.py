@@ -44,6 +44,7 @@ STRINGS = {
     'DEALING_BACK':    "Here, %s, I saved your cards. You're back in the game as player #%s.",
     'JOINED':          "Dealing %s into the game as player #%s!",
     'CANT_JOIN':       "Can't join you to this game, %s. Wait for the next one.",
+    'NICK_CHANGED':    "Followed your nick change from %s to %s. You're still in the %s UNO game!",
     'ENOUGH':          "There are enough players to deal now.",
     'NOT_STARTED':     "Game not started.",
     'NOT_ENOUGH':      "Not enough players to deal yet.",
@@ -467,6 +468,19 @@ class UnoGame:
                     self.owner = self.playerOrder[0]
                     bot.say(STRINGS['OWNER_LEFT'] % self.owner)
 
+    def nick_change(self, bot, trigger):
+        old = trigger.nick
+        new = tools.Identifier(trigger)
+        if old not in self.players:
+            return
+        with lock:
+            idx = self.playerOrder.index(old)
+            self.players[new] = self.players.pop(old)
+            self.playerOrder[idx] = new
+            if self.owner == old:
+                self.owner = new
+            bot.notice(STRINGS['NICK_CHANGED'] % (old, new, self.channel), new)
+
 
 class UnoBot:
     def __init__(self):
@@ -706,6 +720,10 @@ class UnoBot:
     def get_card_theme(bot, nick):
         return bot.db.get_nick_value(tools.Identifier(nick), 'uno_theme') or THEME_NONE
 
+    def nick_change(self, bot, trigger):
+        for game in self.games:
+            self.games[game].nick_change(bot, trigger)
+
 
 unobot = UnoBot()
 
@@ -878,6 +896,13 @@ def unogames(bot, trigger):
     chanlist = ", ".join(chans[:-2] + [" and ".join(chans[-2:])])
     bot.reply(
         "UNO is pending deal in %d %s and in progress in %d %s: %s." % (pending, g_pending, active, g_active, chanlist))
+
+
+# Track nick changes
+@module.event('NICK')
+@module.rule('.*')
+def uno_glue(bot, trigger):
+    unobot.nick_change(bot, trigger)
 
 
 if __name__ == '__main__':
