@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 if sys.version_info.major < 3:
     range = xrange
     str = unicode
-
+# Windows users will want to create/change the SCOREFILE something that exists, like "C:\folderpath\unoscores.txt"
 SCOREFILE = "/var/lib/willie/unoscores.txt"
 DECK_SIZE = 7
 MINIMUM_HAND_FOR_JOIN = 5
