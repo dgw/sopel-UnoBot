@@ -121,7 +121,7 @@ class UnoGame:
     def join(self, bot, trigger):
         with lock:
             if trigger.nick not in self.players:
-                if self.smallestHand < MINIMUM_HAND_FOR_JOIN:
+                if self.smallestHand < MINIMUM_HAND_FOR_JOIN and trigger.nick not in self.deadPlayers:
                     bot.say(STRINGS['CANT_JOIN'] % trigger.nick)
                     return
                 self.players[trigger.nick] = []
