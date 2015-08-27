@@ -45,6 +45,7 @@ STRINGS = {
     'JOINED':          "Dealing %s into the game as player #%s!",
     'CANT_JOIN':       "Can't join you to this game, %s. Wait for the next one.",
     'NICK_CHANGED':    "Followed your nick change from %s to %s. You're still in the %s UNO game!",
+    'NOT_PLAYING':     "You aren't a player in this UNO game!",
     'ENOUGH':          "There are enough players to deal now.",
     'NOT_STARTED':     "Game not started.",
     'NOT_ENOUGH':      "Not enough players to deal yet.",
@@ -194,6 +195,9 @@ class UnoGame:
     def play(self, bot, trigger):
         if not self.deck:
             return
+        if trigger.nick not in self.players:
+            bot.notice(STRINGS['NOT_PLAYING'], trigger.nick)
+            return
         if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
@@ -249,6 +253,9 @@ class UnoGame:
     def draw(self, bot, trigger):
         if not self.deck:
             return
+        if trigger.nick not in self.players:
+            bot.notice(STRINGS['NOT_PLAYING'], trigger.nick)
+            return
         if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
@@ -265,6 +272,9 @@ class UnoGame:
 
     def pass_(self, bot, trigger):
         if not self.deck:
+            return
+        if trigger.nick not in self.players:
+            bot.notice(STRINGS['NOT_PLAYING'], trigger.nick)
             return
         with lock:
             if trigger.nick != self.playerOrder[self.currentPlayer]:
@@ -287,6 +297,9 @@ class UnoGame:
             self.send_next(bot)
 
     def send_cards(self, bot, who):
+        if who not in self.players:
+            bot.notice(STRINGS['NOT_PLAYING'], who)
+            return
         cards = self.players[who]
         bot.notice(STRINGS['YOUR_CARDS']
                    % (len(cards), self.render_cards(cards, UnoBot.get_card_theme(bot, who))), who)
