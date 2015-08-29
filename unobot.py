@@ -23,6 +23,9 @@ MINIMUM_HAND_FOR_JOIN = 5
 YES = WIN = STOP = True
 NO = False
 
+COLORS_ON = 1
+COLORS_OFF = 0
+
 THEME_NONE = 0
 THEME_DARK = 1
 THEME_LIGHT = 2
@@ -86,6 +89,9 @@ STRINGS = {
     'OWNER_LEFT':      "Game owner left! New owner: %s",
     'CANT_KICK':       "Only %s or a bot admin can kick players from the game.",
     'CANT_CONTINUE':   "You need at least two people to play UNO. RIP.",
+    'BAD_COLOR_OPT':   "You must specify on or off for card colors.",
+    'COLOR_SET_ON':    "Will use color codes for %s.",
+    'COLOR_SET_OFF':   "Will print colors for %s.",
     'THEME_CURRENT':   "You are currently using the %s card theme.",
     'THEME_NEEDED':    "You must specify one of the available themes: %s",
     'THEME_SET':       "Set %s to use the %s card theme.",
@@ -99,7 +105,9 @@ STRINGS = {
                         "If you cannot play a card on your turn, you must %pdraw. If that card is not playable, you "
                         "must %ppass (forfeiting your turn).",
                         "Use %punotheme (dark|light) if you are having trouble reading your cards to give them a "
-                        "dark/light background color, respectively. Use %punotheme default to reset it."],
+                        "dark/light background color, respectively. Use %punotheme default to reset it.",
+                        "Alternatively, do %punocolors off to use an alternate presentation format that doesn't "
+                        "use color codes at all."],
     'PLAY_SYNTAX':      "Command syntax error. You must use e.g. %pplay r 3 or %pplay w y.",
 }  # yapf: disable
 COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
@@ -252,7 +260,7 @@ class UnoGame:
             if len(self.players[caller]) != 1:
                 z = [self.get_card(), self.get_card()]
                 self.players[caller].extend(z)
-                bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(z, UnoBot.get_card_theme(bot, caller)), caller)
+                bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(bot, z, caller), caller)
             else:
                 self.unoCalled = caller
 
@@ -273,8 +281,7 @@ class UnoGame:
             self.drawn = YES
             c = self.get_card()
             self.players[self.playerOrder[self.currentPlayer]].append(c)
-        bot.notice(STRINGS['DRAWN_CARD']
-                   % self.render_cards([c], UnoBot.get_card_theme(bot, trigger.nick)), trigger.nick)
+        bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(bot, [c], trigger.nick), trigger.nick)
 
     def pass_(self, bot, trigger):
         if not self.deck:
@@ -298,7 +305,7 @@ class UnoGame:
     def show_on_turn(self, bot):
         with lock:
             pl = self.playerOrder[self.currentPlayer]
-            bot.say(STRINGS['TOP_CARD'] % (pl, self.render_cards([self.topCard], UnoBot.get_card_theme(bot, pl))))
+            bot.say(STRINGS['TOP_CARD'] % (pl, self.render_cards(bot, [self.topCard], pl)))
             self.send_cards(bot, self.playerOrder[self.currentPlayer])
             self.send_next(bot)
 
@@ -307,8 +314,7 @@ class UnoGame:
             bot.notice(STRINGS['NOT_PLAYING'], who)
             return
         cards = self.players[who]
-        bot.notice(STRINGS['YOUR_CARDS']
-                   % (len(cards), self.render_cards(cards, UnoBot.get_card_theme(bot, who))), who)
+        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.render_cards(bot, cards, who)), who)
 
     def send_next(self, bot):
         with lock:
@@ -347,7 +353,24 @@ class UnoGame:
         return ' - '.join(arr)
 
     @staticmethod
-    def render_cards(cards, theme=THEME_NONE):
+    def render_cards(bot, cards, who):
+        if UnoBot.get_card_colors(bot, who):
+            return UnoGame.render_cards_colored(cards, UnoBot.get_card_theme(bot, who))
+        else:
+            return UnoGame.render_cards_nocolor(cards)
+
+    @staticmethod
+    def render_cards_nocolor(cards):
+        ret = []
+        for card in sorted(cards):
+            if card[0] == 'W':
+                ret.append('[W]')
+                continue
+            ret.append('%s[%s]' % (card[0], card[1:]))
+        return ' '.join(ret)
+
+    @staticmethod
+    def render_cards_colored(cards, theme=THEME_NONE):
         card_tmpl = CONTROL_COLOR + '%s%s[%s]'
         background = ''
         bold = ''
@@ -397,23 +420,22 @@ class UnoGame:
 
     def card_played(self, bot, card):
         with lock:
+            pl = self.playerOrder[self.currentPlayer]
             if 'D2' in card:
-                bot.say(STRINGS['D2'] % self.playerOrder[self.currentPlayer])
+                bot.say(STRINGS['D2'] % pl)
                 z = [self.get_card(), self.get_card()]
-                bot.notice(STRINGS['CARDS'] % self.render_cards(z, UnoBot.get_card_theme(bot, self.playerOrder[
-                    self.currentPlayer])), self.playerOrder[self.currentPlayer])
-                self.players[self.playerOrder[self.currentPlayer]].extend(z)
+                bot.notice(STRINGS['CARDS'] % self.render_cards(bot, z, pl), pl)
+                self.players[pl].extend(z)
                 self.inc_player()
             elif 'WD4' in card:
-                bot.say(STRINGS['WD4'] % self.playerOrder[self.currentPlayer])
+                bot.say(STRINGS['WD4'] % pl)
                 z = [self.get_card(), self.get_card(), self.get_card(),
                      self.get_card()]
-                bot.notice(STRINGS['CARDS'] % self.render_cards(z, UnoBot.get_card_theme(bot, self.playerOrder[
-                    self.currentPlayer])), self.playerOrder[self.currentPlayer])
-                self.players[self.playerOrder[self.currentPlayer]].extend(z)
+                bot.notice(STRINGS['CARDS'] % self.render_cards(bot, z, pl), pl)
+                self.players[pl].extend(z)
                 self.inc_player()
             elif 'S' in card:
-                bot.say(STRINGS['SKIPPED'] % self.playerOrder[self.currentPlayer])
+                bot.say(STRINGS['SKIPPED'] % pl)
                 self.inc_player()
             elif card[1] == 'R' and 'W' not in card:
                 bot.say(STRINGS['REVERSED'])
@@ -729,6 +751,27 @@ class UnoBot:
                 bot.say("Wrote UNO score file in new JSON format.")
 
     @staticmethod
+    def set_card_colors(bot, trigger):
+        setting = trigger.group(3).lower() or None
+        if not setting or setting not in ['on', 'off', 'yes', 'no']:
+            bot.reply(STRINGS['BAD_COLOR_OPT'])
+            return
+        if setting in ['on', 'yes']:
+            setting = COLORS_ON
+            bot.say(STRINGS['COLOR_SET_ON'] % trigger.nick)
+        elif setting in ['off', 'no']:
+            setting = COLORS_OFF
+            bot.say(STRINGS['COLOR_SET_OFF'] % trigger.nick)
+        bot.db.set_nick_value(trigger.nick, 'uno_colors', setting)
+
+    @staticmethod
+    def get_card_colors(bot, nick):
+        ret = bot.db.get_nick_value(nick, 'uno_colors')
+        if ret is None:
+            return COLORS_ON
+        return ret
+
+    @staticmethod
     def set_card_theme(bot, trigger):
         theme = trigger.group(3) or None
         if not theme:
@@ -880,6 +923,16 @@ def unocounts(bot, trigger):
     Sends current UNO card counts to the channel, if a game is in progress.
     """
     unobot.send_counts(bot, trigger)
+
+
+@module.commands('unocolor', 'unocolour', 'unocolors', 'unocolours')
+@module.example(".unocolor off")
+@module.priority('low')
+def unocolor(bot, trigger):
+    """
+    Set colored cards on or off. Disabling color will present cards in an alternate format.
+    """
+    unobot.set_card_colors(bot, trigger)
 
 
 @module.commands('unotheme')
