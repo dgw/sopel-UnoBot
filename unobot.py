@@ -48,6 +48,12 @@ STRINGS = {
     'NOT_PLAYING':     "You aren't a player in this UNO game!",
     'ENOUGH':          "There are enough players to deal now.",
     'NOT_STARTED':     "Game not started.",
+    'NOT_IN_CHANNEL':  "I'm not in %s, so I can't move the game there.",
+    'NEED_CHANNEL':    "I need a channel name to move to.",
+    'CANT_MOVE':       "Only %s can move the game.",
+    'CHANNEL_IN_USE':  "Channel %s already has an UNO game in progress.",
+    'GAME_MOVED':      "%s UNO game moved to %s.",
+    'MOVED_FROM':      "Note: %s moved an UNO here from %s.",
     'NOT_ENOUGH':      "Not enough players to deal yet.",
     'NEEDS_TO_DEAL':   "%s needs to deal.",
     'ALREADY_DEALT':   "Already dealt.",
@@ -494,6 +500,13 @@ class UnoGame:
                 self.owner = new
             bot.notice(STRINGS['NICK_CHANGED'] % (old, new, self.channel), new)
 
+    def game_moved(self, bot, who, oldchan, newchan):
+        with lock:
+            self.channel = newchan
+            bot.msg(self.channel, STRINGS['MOVED_FROM'] % (who, oldchan))
+            for player in self.players:
+                bot.notice(STRINGS['GAME_MOVED'] % (oldchan, newchan), player)
+
 
 class UnoBot:
     def __init__(self):
@@ -737,6 +750,34 @@ class UnoBot:
         for game in self.games:
             self.games[game].nick_change(bot, trigger)
 
+    def move_game(self, bot, trigger):
+        who = trigger.nick
+        oldchan = trigger.sender
+        newchan = tools.Identifier(trigger.group(3))
+        if newchan[0] != '#':
+            newchan = tools.Identifier('#' + newchan)
+        if oldchan not in self.games:
+            bot.reply(STRINGS['NOT_STARTED'])
+            return
+        owner = self.games[oldchan].owner
+        if trigger.admin or who == owner:
+            if not newchan:
+                bot.reply(STRINGS['NEED_CHANNEL'])
+                return
+            if newchan == oldchan:
+                return
+            if newchan.lower() not in bot.privileges:
+                bot.reply(STRINGS['NOT_IN_CHANNEL'] % newchan)
+                return
+            if newchan in self.games:
+                bot.reply(STRINGS['CHANNEL_IN_USE'] % newchan)
+                return
+            game = self.games.pop(oldchan)
+            self.games[newchan] = game
+            game.game_moved(bot, who, oldchan, newchan)
+        else:
+            bot.reply(STRINGS['CANT_MOVE'] % owner)
+
 
 unobot = UnoBot()
 
@@ -909,6 +950,17 @@ def unogames(bot, trigger):
     chanlist = ", ".join(chans[:-2] + [" and ".join(chans[-2:])])
     bot.reply(
         "UNO is pending deal in %d %s and in progress in %d %s: %s." % (pending, g_pending, active, g_active, chanlist))
+
+
+@module.commands('unomove')
+@module.priority('high')
+@module.example('.unomove #anotherchannel')
+def unomove(bot, trigger):
+    """
+    Lets the game owner or a bot admin move an UNO game from one channel to another,
+    assuming there's no game happening in that channel.
+    """
+    unobot.move_game(bot, trigger)
 
 
 # Track nick changes
