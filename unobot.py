@@ -108,7 +108,7 @@ STRINGS = {
                         "dark/light background color, respectively. Use %punotheme default to reset it.",
                         "Alternatively, do %punocolors off to use an alternate presentation format that doesn't "
                         "use color codes at all."],
-    'PLAY_SYNTAX':      "Command syntax error. You must use e.g. %pplay r 3 or %pplay w y.",
+    'PLAY_SYNTAX':     "Command syntax error. You must use e.g. %pplay r 3 or %pplay w y.",
 }  # yapf: disable
 COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
@@ -953,7 +953,6 @@ def unohelp(bot, trigger):
     Shows some basic help for UNO game-play.
     """
     p = bot.config.core.help_prefix
-    r = trigger.nick
     bot.reply(STRINGS['HELP_INTRO'])
     for line in STRINGS['HELP_LINES']:
         bot.notice(line.replace('%p', p), trigger.nick)
