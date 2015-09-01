@@ -869,14 +869,14 @@ def unokick(bot, trigger):
 
 
 @module.commands('deal')
-@module.priority('high')
+@module.priority('medium')
 @module.require_chanmsg
 def unodeal(bot, trigger):
     unobot.deal(bot, trigger)
 
 
 @module.commands('play')
-@module.priority('high')
+@module.priority('medium')
 @module.require_chanmsg
 def unoplay(bot, trigger):
     unobot.play(bot, trigger)
@@ -890,14 +890,14 @@ def unocalled(bot, trigger):
 
 
 @module.commands('draw')
-@module.priority('high')
+@module.priority('medium')
 @module.require_chanmsg
 def unodraw(bot, trigger):
     unobot.draw(bot, trigger)
 
 
 @module.commands('pass')
-@module.priority('high')
+@module.priority('medium')
 @module.require_chanmsg
 def unopass(bot, trigger):
     unobot.pass_(bot, trigger)
@@ -905,7 +905,7 @@ def unopass(bot, trigger):
 
 @module.commands('cards')
 @module.example(".cards")
-@module.priority('high')
+@module.priority('medium')
 @module.require_chanmsg
 def unocards(bot, trigger):
     """
@@ -916,7 +916,7 @@ def unocards(bot, trigger):
 
 @module.commands('counts')
 @module.example(".counts")
-@module.priority('high')
+@module.priority('medium')
 @module.require_chanmsg
 def unocounts(bot, trigger):
     """
@@ -937,7 +937,7 @@ def unocolor(bot, trigger):
 
 @module.commands('unotheme')
 @module.example(".unotheme dark")
-@module.priority('high')
+@module.priority('low')
 def unotheme(bot, trigger):
     """
     Sets your UNO card theme to have a dark/light background. Clear your theme setting with "default".
@@ -947,7 +947,7 @@ def unotheme(bot, trigger):
 
 @module.commands('unohelp')
 @module.example(".unohelp")
-@module.priority('high')
+@module.priority('low')
 def unohelp(bot, trigger):
     """
     Shows some basic help for UNO game-play.
@@ -960,7 +960,7 @@ def unohelp(bot, trigger):
 
 @module.commands('unotop')
 @module.example(".unotop")
-@module.priority('high')
+@module.priority('low')
 def unotop(bot, trigger):
     """
     Shows the top 5 players by score. Unlike most UNO commands, can be sent in a PM.
@@ -971,7 +971,7 @@ def unotop(bot, trigger):
 @module.commands('unorank')
 @module.example(".unorank")
 @module.example(".unorank UnoAddict")
-@module.priority('high')
+@module.priority('low')
 def unorank(bot, trigger):
     """
     Shows the ranking, by accumulated UNO points, of the calling player or the specified nick.
@@ -1018,6 +1018,7 @@ def unomove(bot, trigger):
 # Track nick changes
 @module.event('NICK')
 @module.rule('.*')
+@module.priority('high')
 def uno_glue(bot, trigger):
     unobot.nick_change(bot, trigger)
 
