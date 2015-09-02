@@ -39,7 +39,6 @@ THEME_NAMES = dict((v, n) for (n, v) in THEMES.items())
 lock = threading.RLock()
 
 STRINGS = {
-    'ALREADY_STARTED': "Game already started by %s! Type join to join!",
     'GAME_STARTED':    "IRC-UNO started by %s - Type join to join!",
     'GAME_STOPPED':    "Game stopped.",
     'CANT_STOP':       "%s is the game owner, you can't stop it!",
@@ -538,7 +537,7 @@ class UnoBot:
 
     def start(self, bot, trigger):
         if trigger.sender in self.games:
-            bot.say(STRINGS['ALREADY_STARTED'] % self.games[trigger.sender].owner)
+            self.join(bot, trigger)
         else:
             self.games[trigger.sender] = UnoGame(trigger)
             bot.say(STRINGS['GAME_STARTED'] % self.games[trigger.sender].owner)
