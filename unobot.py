@@ -186,11 +186,11 @@ class UnoGame:
         if len(self.players) < 2:
             bot.say(STRINGS['NOT_ENOUGH'])
             return
-        if trigger.nick != self.owner and not trigger.admin:
-            bot.say(STRINGS['NEEDS_TO_DEAL'] % self.owner)
-            return
         if len(self.deck):
             bot.say(STRINGS['ALREADY_DEALT'])
+            return
+        if trigger.nick != self.owner and not trigger.admin:
+            bot.say(STRINGS['NEEDS_TO_DEAL'] % self.owner)
             return
         with lock:
             self.startTime = datetime.now()
@@ -309,11 +309,14 @@ class UnoGame:
             self.send_next(bot)
 
     def send_cards(self, bot, who):
-        if who not in self.players:
-            bot.notice(STRINGS['NOT_PLAYING'], who)
-            return
-        cards = self.players[who]
-        bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.render_cards(bot, cards, who)), who)
+        with lock:
+            if not self.startTime:
+                bot.notice(STRINGS['NOT_STARTED'], who)
+            if who not in self.players:
+                bot.notice(STRINGS['NOT_PLAYING'], who)
+                return
+            cards = self.players[who]
+            bot.notice(STRINGS['YOUR_CARDS'] % (len(cards), self.render_cards(bot, cards, who)), who)
 
     def send_next(self, bot):
         with lock:
