@@ -220,7 +220,10 @@ class UnoGame:
         color = trigger.group(3).upper()
         if color in CARD_COLORS:
             card = trigger.group(4).upper()
-            searchcard = color + card
+            if card in SPECIAL_CARDS:
+                searchcard = card
+            else:
+                searchcard = color + card
         elif color in SPECIAL_CARDS:
             card = color
             color = trigger.group(4).upper()
