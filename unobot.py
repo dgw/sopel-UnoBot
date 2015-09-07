@@ -458,17 +458,18 @@ class UnoGame:
 
     @staticmethod
     def create_deck():
-        ret = []
+        new_deck = []
         for a in COLORED_CARD_NUMS:
             for b in CARD_COLORS:
-                ret.append(b + a)
+                new_deck.append(b + a)
         for a in SPECIAL_CARDS:
-            ret.append(a)
-            ret.append(a)
+            new_deck.append(a)
+            new_deck.append(a)
 
-        ret *= 2
-        random.shuffle(ret)
-        return ret
+        new_deck *= 4
+        random.shuffle(new_deck)
+        random.shuffle(new_deck)
+        return new_deck
 
     def inc_player(self):
         with lock:
