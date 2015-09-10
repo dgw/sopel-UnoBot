@@ -304,6 +304,17 @@ class UnoGame:
             self.inc_player()
         self.show_on_turn(bot)
 
+    def fml(self, bot, trigger):
+        if not self.deck or trigger.nick not in self.players:
+            return
+        with lock:
+            if trigger.nick != self.playerOrder[self.currentPlayer]:
+                return
+            if self.drawn:
+                self.pass_(bot, trigger)
+            else:
+                self.draw(bot, trigger)
+
     def show_on_turn(self, bot):
         with lock:
             pl = self.playerOrder[self.currentPlayer]
@@ -622,6 +633,11 @@ class UnoBot:
         game = self.games[trigger.sender]
         game.pass_(bot, trigger)
 
+    def fml(self, bot, trigger):
+        if trigger.sender not in self.games:
+            return
+        self.games[trigger.sender].fml(bot, trigger)
+
     def send_cards(self, bot, trigger):
         if trigger.sender not in self.games:
             return
@@ -903,6 +919,14 @@ def unodraw(bot, trigger):
 @module.require_chanmsg
 def unopass(bot, trigger):
     unobot.pass_(bot, trigger)
+
+
+@module.commands('fuck')
+@module.rule('fuck')
+@module.priority('medium')
+@module.require_chanmsg
+def fml(bot, trigger):
+    unobot.fml(bot, trigger)
 
 
 @module.commands('cards')
