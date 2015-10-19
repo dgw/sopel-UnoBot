@@ -719,10 +719,6 @@ class UnoBot:
                 bot.say("Error saving UNO score file: %s" % e)
 
     def get_scores(self, bot):
-        # @TODO refactor to get rid of redundant function
-        return self.load_scores(bot)
-
-    def load_scores(self, bot):
         scores = {}
         with lock:
             try:
@@ -731,7 +727,7 @@ class UnoBot:
             except ValueError:
                 try:
                     self.convert_score_file(bot)
-                    return self.load_scores(bot)
+                    return self.get_scores(bot)
                 except ValueError:
                     bot.say("Something has gone horribly wrong with the UNO scores. Please submit an issue on GitHub.")
             except IOError, e:
