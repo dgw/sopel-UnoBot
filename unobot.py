@@ -2,9 +2,9 @@
 This file is covered under the project license, located in LICENSE.md
 """
 
-import willie.module as module
-import willie.tools as tools
-from willie.formatting import colors, CONTROL_BOLD, CONTROL_COLOR, CONTROL_NORMAL
+import sopel.module as module
+import sopel.tools as tools
+from sopel.formatting import colors, CONTROL_BOLD, CONTROL_COLOR, CONTROL_NORMAL
 import json
 import random
 import sys
@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 if sys.version_info.major < 3:
     range = xrange
     str = unicode
-
+# Windows users will want to create/change the SCOREFILE something that exists, like "C:\folderpath\unoscores.txt"
 SCOREFILE = "/var/lib/willie/unoscores.txt"
 DECK_SIZE = 7
 MINIMUM_HAND_FOR_JOIN = 5
