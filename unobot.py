@@ -55,7 +55,7 @@ STRINGS = {
     'CANT_MOVE':       "Only %s can move the game.",
     'CHANNEL_IN_USE':  "Channel %s already has an UNO game in progress.",
     'GAME_MOVED':      "%s UNO game moved to %s.",
-    'MOVED_FROM':      "Note: %s moved an UNO here from %s.",
+    'MOVED_FROM':      "Note: %s moved an UNO game here from %s.",
     'NOT_ENOUGH':      "Not enough players to deal yet.",
     'NEEDS_TO_DEAL':   "%s needs to deal.",
     'ALREADY_DEALT':   "Already dealt.",
