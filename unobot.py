@@ -545,6 +545,7 @@ class UnoGame:
             bot.msg(self.channel, STRINGS['MOVED_FROM'] % (who, oldchan))
             for player in self.players:
                 bot.notice(STRINGS['GAME_MOVED'] % (oldchan, newchan), player)
+            bot.msg(oldchan, STRINGS['GAME_MOVED'] % (oldchan, newchan))
 
 
 class UnoBot:
