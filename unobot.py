@@ -63,6 +63,7 @@ STRINGS = {
     'DONT_HAVE':       "You don't have that card!",
     'DOESNT_PLAY':     "That card can't be played now.",
     'UNO':             "UNO! %s has ONE card left!",
+    'UNO_LIED':        "%s draws two cards for lying about having UNO!",
     'WIN':             "We have a winner: %s!!! This game took %s",
     'DRAWN_ALREADY':   "You've already drawn, either play or pass.",
     'DRAWN_CARD':      "You drew: %s",
@@ -128,6 +129,7 @@ class UnoGame:
         self.way = 1
         self.drawn = NO
         self.smallestHand = DECK_SIZE
+        self.unoCalled = NO
         self.deck = []
         self.startTime = None
 
@@ -254,6 +256,21 @@ class UnoGame:
             elif len(self.players[self.playerOrder[pl]]) == 0:
                 return WIN
             self.show_on_turn(bot)
+
+    def call_uno(self, bot, trigger):
+        caller = trigger.nick
+        if self.unoCalled:
+            return  # UNO was already called this turn
+        if caller != self.playerOrder[self.currentPlayer]:
+            return  # it isn't this player's turn
+        self.unoCalled = YES
+        caller = trigger.nick
+        with lock:
+            if len(self.players[caller]) != 1:
+                bot.say(STRINGS['UNO_LIED'] % caller)
+                z = [self.get_card(), self.get_card()]
+                self.players[caller].extend(z)
+                bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(bot, z, caller), caller)
 
     def draw(self, bot, trigger):
         if not self.deck:
@@ -479,6 +496,7 @@ class UnoGame:
                 self.currentPlayer = 0
             if self.currentPlayer < 0:
                 self.currentPlayer = len(self.players) - 1
+            self.unoCalled = NO  # Reset flag on every turn
 
     def remove_player(self, bot, player):
         if len(self.players) == 1:
@@ -605,6 +623,11 @@ class UnoBot:
             game_duration = '%.2d:%.2d:%.2d' % (hours, minutes, seconds)
             bot.say(STRINGS['WIN'] % (winner, game_duration))
             self.game_ended(bot, trigger, winner)
+
+    def call_uno(self, bot, trigger):
+        if trigger.sender not in self.games:
+            return
+        self.games[trigger.sender].call_uno(bot, trigger)
 
     def draw(self, bot, trigger):
         if trigger.sender not in self.games:
@@ -879,6 +902,13 @@ def unodeal(bot, trigger):
 @module.require_chanmsg
 def unoplay(bot, trigger):
     unobot.play(bot, trigger)
+
+
+@module.rule('^uno!?$')
+@module.priority('high')
+@module.require_chanmsg
+def unocalled(bot, trigger):
+    unobot.call_uno(bot, trigger)
 
 
 @module.commands('draw')
