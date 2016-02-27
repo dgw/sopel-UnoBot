@@ -17,7 +17,7 @@ if sys.version_info.major < 3:
     str = unicode
 
 SCOREFILE = "/var/lib/sopel/unoscores.txt"
-DECK_SIZE = 7
+HAND_SIZE = 7
 MINIMUM_HAND_FOR_JOIN = 5
 
 YES = WIN = STOP = True
@@ -127,7 +127,7 @@ class UnoGame:
         self.topCard = None
         self.way = 1
         self.drawn = NO
-        self.smallestHand = DECK_SIZE
+        self.smallestHand = HAND_SIZE
         self.deck = []
         self.startTime = None
 
@@ -146,7 +146,7 @@ class UnoGame:
                             trigger.nick, self.playerOrder.index(trigger.nick) + 1
                         ))
                         return
-                    for i in range(0, DECK_SIZE):
+                    for i in range(0, HAND_SIZE):
                         self.players[trigger.nick].append(self.get_card())
                     bot.say(STRINGS['DEALING_IN'] % (
                         trigger.nick, self.playerOrder.index(trigger.nick) + 1
@@ -194,7 +194,7 @@ class UnoGame:
         with lock:
             self.startTime = datetime.now()
             self.deck = self.create_deck()
-            for i in range(0, DECK_SIZE):
+            for i in range(0, HAND_SIZE):
                 for p in self.players:
                     self.players[p].append(self.get_card())
             self.topCard = self.get_card()
