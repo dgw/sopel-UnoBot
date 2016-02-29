@@ -961,6 +961,7 @@ def unohelp(bot, trigger):
 @module.commands('unotop')
 @module.example(".unotop")
 @module.priority('low')
+@module.rate(900)
 def unotop(bot, trigger):
     """
     Shows the top 5 players by score. Unlike most UNO commands, can be sent in a PM.
