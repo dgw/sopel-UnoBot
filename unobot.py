@@ -82,7 +82,7 @@ STRINGS = {
     'WD4':             "%s draws four and is skipped!",
     'SKIPPED':         "%s is skipped!",
     'REVERSED':        "Order reversed!",
-    'GAINS':           "%s gains %s points!",
+    'GAINS':           "%s gains %s %s!",
     'PLAYER_QUIT':     "Removing %s (player #%d) from the current UNO game.",
     'PLAYER_KICK':     "Kicking %s (player #%d) from the game at %s's request.",
     'OWNER_LEFT':      "Game owner left! New owner: %s",
@@ -678,7 +678,7 @@ class UnoBot:
                             score += self.special_scores[c[1:]]
                         else:
                             score += int(c[1])
-                bot.say(STRINGS['GAINS'] % (winner, score))
+                bot.say(STRINGS['GAINS'] % (winner, score, 'point' if score == 1 else 'points'))
                 self.update_scores(bot, game.players.keys(), winner, score,
                                    (datetime.now() - game.startTime).seconds)
             except Exception, e:
