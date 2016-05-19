@@ -200,7 +200,7 @@ class UnoGame:
             self.topCard = self.get_card()
             while self.topCard in ['W', 'WD4']:
                 self.topCard = self.get_card()
-            self.currentPlayer = 1
+            self.currentPlayer = random.randrange(len(self.players))  # issue #6
             self.card_played(bot, self.topCard)
             self.show_on_turn(bot)
 
