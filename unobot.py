@@ -439,7 +439,7 @@ class UnoGame:
                 bot.notice(STRINGS['CARDS'] % self.render_cards(bot, z, pl), pl)
                 self.players[pl].extend(z)
                 self.inc_player()
-            elif 'S' in card:
+            elif 'S' in card or (len(self.playerOrder) == 2 and card[1] == 'R' and 'W' not in card):  # issue #25
                 bot.say(STRINGS['SKIPPED'] % pl)
                 self.inc_player()
             elif card[1] == 'R' and 'W' not in card:
