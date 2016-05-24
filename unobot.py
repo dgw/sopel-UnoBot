@@ -315,6 +315,7 @@ class UnoGame:
         with lock:
             if not self.startTime:
                 bot.notice(STRINGS['NOT_STARTED'], who)
+                return
             if who not in self.players:
                 bot.notice(STRINGS['NOT_PLAYING'], who)
                 return
