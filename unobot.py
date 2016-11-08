@@ -369,8 +369,8 @@ class UnoGame:
     def render_cards_nocolor(cards):
         ret = []
         for card in sorted(cards):
-            if card[0] == 'W':
-                ret.append('[W]')
+            if card in ['W', 'WD4']:
+                ret.append('[%s]' % card)
                 continue
             ret.append('%s[%s]' % (card[0], card[1:]))
         return ' '.join(ret)
