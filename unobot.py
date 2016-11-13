@@ -372,6 +372,8 @@ class UnoGame:
             if card in ['W', 'WD4']:
                 ret.append('[%s]' % card)
                 continue
+            if 'W' in card:
+                card = card[0] + '*'
             ret.append('%s[%s]' % (card[0], card[1:]))
         return ' '.join(ret)
 
