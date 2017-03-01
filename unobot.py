@@ -360,6 +360,7 @@ class UnoGame:
 
     @staticmethod
     def render_cards(bot, cards, who):
+        cards = sorted(cards)
         if UnoBot.get_card_colors(bot, who):
             return UnoGame.render_cards_colored(cards, UnoBot.get_card_theme(bot, who))
         else:
@@ -368,7 +369,7 @@ class UnoGame:
     @staticmethod
     def render_cards_nocolor(cards):
         ret = []
-        for card in sorted(cards):
+        for card in cards:
             if card in ['W', 'WD4']:
                 ret.append('[%s]' % card)
                 continue
@@ -398,7 +399,7 @@ class UnoGame:
                 green_code = colors.GREEN
                 yellow_code = colors.ORANGE
         ret = []
-        for card in sorted(cards):
+        for card in cards:
             if card in ['W', 'WD4']:
                 ret.append(card_tmpl % (wild_code, background, card))
                 continue
