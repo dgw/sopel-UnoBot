@@ -361,6 +361,12 @@ class UnoGame:
     @staticmethod
     def render_cards(bot, cards, who):
         cards = sorted(cards)
+        wilds = []
+        for card in cards:
+            if 'W' in card:
+                cards.remove(card)
+                wilds.append(card)
+        cards.extend(sorted(wilds))
         if UnoBot.get_card_colors(bot, who):
             return UnoGame._render_colored_cards(cards, UnoBot.get_card_theme(bot, who))
         else:
