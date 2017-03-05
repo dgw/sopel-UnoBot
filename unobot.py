@@ -109,7 +109,7 @@ STRINGS = {
                         "use color codes at all."],
     'PLAY_SYNTAX':     "Command syntax error. You must use e.g. %pplay r 3 or %pplay w y.",
 }  # yapf: disable
-COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
+COLORED_CARD_NUMS = sorted(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2'])
 CARD_COLORS = 'RGBY'
 SPECIAL_CARDS = ['W', 'WD4']
 
@@ -462,7 +462,7 @@ class UnoGame:
     @staticmethod
     def create_deck():
         new_deck = []
-        for card in COLORED_CARD_NUMS:
+        for card in (COLORED_CARD_NUMS + COLORED_CARD_NUMS[1:]):
             for color in CARD_COLORS:
                 new_deck.append(color + card)
         for card in SPECIAL_CARDS:
