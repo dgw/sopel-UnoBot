@@ -469,7 +469,7 @@ class UnoGame:
             new_deck.append(card)
             new_deck.append(card)
 
-        new_deck *= 4
+        new_deck *= 2
         random.shuffle(new_deck)
         random.shuffle(new_deck)
         return new_deck
