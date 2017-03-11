@@ -109,7 +109,8 @@ STRINGS = {
                         "use color codes at all."],
     'PLAY_SYNTAX':     "Command syntax error. You must use e.g. %pplay r 3 or %pplay w y.",
 }  # yapf: disable
-COLORED_CARD_NUMS = sorted(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2'])
+# don't sort card values to ensure 0 is ALWAYS first
+COLORED_CARD_NUMS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
 SPECIAL_CARDS = ['W', 'WD4']
 
