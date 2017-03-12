@@ -467,8 +467,7 @@ class UnoGame:
             for color in CARD_COLORS:
                 new_deck.append(color + card)
         for card in SPECIAL_CARDS:
-            new_deck.append(card)
-            new_deck.append(card)
+            new_deck.extend([card] * 4)
 
         new_deck *= 2
         random.shuffle(new_deck)
