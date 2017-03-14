@@ -360,15 +360,22 @@ class UnoGame:
 
     @staticmethod
     def render_cards(bot, cards, who):
+        cards = sorted(cards)
+        wilds = []
+        for card in cards:
+            if 'W' in card:
+                cards.remove(card)
+                wilds.append(card)
+        cards.extend(sorted(wilds))
         if UnoBot.get_card_colors(bot, who):
-            return UnoGame.render_cards_colored(cards, UnoBot.get_card_theme(bot, who))
+            return UnoGame._render_colored_cards(cards, UnoBot.get_card_theme(bot, who))
         else:
-            return UnoGame.render_cards_nocolor(cards)
+            return UnoGame._render_nocolor_cards(cards)
 
     @staticmethod
-    def render_cards_nocolor(cards):
+    def _render_nocolor_cards(cards):
         ret = []
-        for card in sorted(cards):
+        for card in cards:
             if card in ['W', 'WD4']:
                 ret.append('[%s]' % card)
                 continue
@@ -378,7 +385,7 @@ class UnoGame:
         return ' '.join(ret)
 
     @staticmethod
-    def render_cards_colored(cards, theme=THEME_NONE):
+    def _render_colored_cards(cards, theme=THEME_NONE):
         card_tmpl = CONTROL_COLOR + '%s%s[%s]'
         background = ''
         bold = ''
@@ -398,7 +405,7 @@ class UnoGame:
                 green_code = colors.GREEN
                 yellow_code = colors.ORANGE
         ret = []
-        for card in sorted(cards):
+        for card in cards:
             if card in ['W', 'WD4']:
                 ret.append(card_tmpl % (wild_code, background, card))
                 continue
