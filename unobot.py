@@ -109,7 +109,8 @@ STRINGS = {
                         "use color codes at all."],
     'PLAY_SYNTAX':     "Command syntax error. You must use e.g. %pplay r 3 or %pplay w y.",
 }  # yapf: disable
-COLORED_CARD_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
+# don't sort card values to ensure 0 is ALWAYS first
+COLORED_CARD_NUMS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'R', 'S', 'D2']
 CARD_COLORS = 'RGBY'
 SPECIAL_CARDS = ['W', 'WD4']
 
@@ -469,14 +470,13 @@ class UnoGame:
     @staticmethod
     def create_deck():
         new_deck = []
-        for card in COLORED_CARD_NUMS:
+        for card in (COLORED_CARD_NUMS + COLORED_CARD_NUMS[1:]):
             for color in CARD_COLORS:
                 new_deck.append(color + card)
         for card in SPECIAL_CARDS:
-            new_deck.append(card)
-            new_deck.append(card)
+            new_deck.extend([card] * 4)
 
-        new_deck *= 4
+        new_deck *= 2
         random.shuffle(new_deck)
         random.shuffle(new_deck)
         return new_deck
