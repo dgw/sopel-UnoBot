@@ -467,8 +467,7 @@ class UnoGame:
                 self.deck = self.create_deck()
         return ret
 
-    @staticmethod
-    def create_deck():
+    def create_deck(self):
         new_deck = []
         for card in (COLORED_CARD_NUMS + COLORED_CARD_NUMS[1:]):
             for color in CARD_COLORS:
@@ -477,6 +476,12 @@ class UnoGame:
             new_deck.extend([card] * 4)
 
         new_deck *= 2
+
+        new_deck.remove(self.topCard)
+        for hand in self.players:
+            for card in hand:
+                new_deck.remove(card)
+
         random.shuffle(new_deck)
         random.shuffle(new_deck)
         return new_deck
