@@ -217,19 +217,35 @@ class UnoGame:
         if not trigger.group(3) or not trigger.group(4):
             bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
             return
-        color = trigger.group(3).upper()
-        if color in CARD_COLORS:
-            card = trigger.group(4).upper()
-            if card in SPECIAL_CARDS:
-                searchcard = card
-            else:
-                searchcard = color + card
-        elif color in SPECIAL_CARDS:
-            card = color
-            color = trigger.group(4).upper()
+
+        # some gymnastics are needed to support both '.play r d2' and '.play d2 r'
+        arg1 = trigger.group(3).upper()
+        arg2 = trigger.group(4).upper()
+        color = card = None
+        if arg1 in CARD_COLORS and arg2 not in CARD_COLORS:
+            color = arg1
+            card = arg2
+        elif arg1 not in CARD_COLORS and arg2 in CARD_COLORS:
+            color = arg2
+            card = arg1
+        elif arg1 in CARD_COLORS and arg2 in CARD_COLORS:
+            if (arg1, arg2) == ('R', 'R'):  # red reverses are the only valid overlapping case
+                color = 'R'
+                card = 'R'
+        else:
+            if arg1 in CARD_COLORS and arg2 in SPECIAL_CARDS:
+                color = arg1
+                card = arg2
+            elif arg1 in SPECIAL_CARDS and arg2 in CARD_COLORS:
+                color = arg2
+                card = arg1
+        if not color or not card:  # fail-safe sanity check
+            bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
+            return
+        if card in SPECIAL_CARDS:
             searchcard = card
         else:
-            return
+            searchcard = color + card
 
         with lock:
             pl = self.currentPlayer
