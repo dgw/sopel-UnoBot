@@ -214,38 +214,27 @@ class UnoGame:
         if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
-        if not trigger.group(3) or not trigger.group(4):
-            bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
-            return
 
-        # some gymnastics are needed to support both '.play r d2' and '.play d2 r'
-        arg1 = trigger.group(3).upper()
-        arg2 = trigger.group(4).upper()
-        color = card = None
-        if arg1 in CARD_COLORS and arg2 not in CARD_COLORS:
-            color = arg1
-            card = arg2
-        elif arg1 not in CARD_COLORS and arg2 in CARD_COLORS:
-            color = arg2
-            card = arg1
-        elif arg1 in CARD_COLORS and arg2 in CARD_COLORS:
-            if (arg1, arg2) == ('R', 'R'):  # red reverses are the only valid overlapping case
-                color = 'R'
-                card = 'R'
-        else:
-            if arg1 in CARD_COLORS and arg2 in SPECIAL_CARDS:
-                color = arg1
-                card = arg2
-            elif arg1 in SPECIAL_CARDS and arg2 in CARD_COLORS:
-                color = arg2
-                card = arg1
-        if not color or not card:  # fail-safe sanity check
+        color, card = trigger.group(3), trigger.group(4)
+        if not color or not card:
             bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
             return
-        if card in SPECIAL_CARDS:
-            searchcard = card
-        else:
-            searchcard = color + card
+        color, card = color.upper(), card.upper()
+
+        # some gymnastics to support both '.play r d2' and '.play d2 r'
+        if color not in CARD_COLORS:
+            color, card = card, color
+        elif card not in (COLORED_CARD_NUMS + SPECIAL_CARDS):
+            color, card = card, color
+        if color in CARD_COLORS:
+            if card in SPECIAL_CARDS:
+                searchcard = card
+            elif card in COLORED_CARD_NUMS:
+                searchcard = color + card
+            else:  # card neither number nor special = invalid play
+                return
+        else:  # no color = invalid play
+            return
 
         with lock:
             pl = self.currentPlayer
