@@ -215,25 +215,23 @@ class UnoGame:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
 
-        color, card = trigger.group(3), trigger.group(4)
-        if not color or not card:
-            bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
-            return
-        color, card = color.upper(), card.upper()
+        try:
+            color, card = trigger.group(3).upper(), trigger.group(4).upper()  # raises AttributeError if either missing
 
-        # some gymnastics to support both '.play r d2' and '.play d2 r'
-        if color not in CARD_COLORS:
-            color, card = card, color
-        elif card not in (COLORED_CARD_NUMS + SPECIAL_CARDS):
-            color, card = card, color
-        if color in CARD_COLORS:
-            if card in SPECIAL_CARDS:
-                searchcard = card
-            elif card in COLORED_CARD_NUMS:
-                searchcard = color + card
-            else:  # card neither number nor special = invalid play
-                return
-        else:  # no color = invalid play
+            # some gymnastics to support both '.play r d2' and '.play d2 r'
+            if color not in CARD_COLORS:
+                color, card = card, color
+            elif card not in (COLORED_CARD_NUMS + SPECIAL_CARDS):
+                color, card = card, color
+            if color in CARD_COLORS and card in (COLORED_CARD_NUMS + SPECIAL_CARDS):
+                if card in SPECIAL_CARDS:
+                    searchcard = card
+                else:
+                    searchcard = color + card
+            else:  # raise InvalidCardError to indicate that arguments were not valid
+                raise InvalidCardError("Card color or value invalid")
+        except (AttributeError, InvalidCardError):  # insufficient arguments or invalid card
+            bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
             return
 
         with lock:
@@ -834,6 +832,10 @@ class UnoBot:
             game.game_moved(bot, who, oldchan, newchan)
         else:
             bot.reply(STRINGS['CANT_MOVE'] % owner)
+
+
+class InvalidCardError(ValueError):
+    pass
 
 
 unobot = UnoBot()
