@@ -377,10 +377,10 @@ class UnoGame:
     def _render_nocolor_cards(cards):
         ret = []
         for card in cards:
-            if card in ['W', 'WD4']:
+            if card in ['W', 'WD4']:  # unplayed wilds have no color, so just render & move on
                 ret.append('[%s]' % card)
                 continue
-            if 'W' in card:
+            if 'W' in card:  # played wilds need to be displayed as '*'
                 card = card[0] + '*'
             ret.append('%s[%s]' % (card[0], card[1:]))
         return ' '.join(ret)
@@ -407,10 +407,10 @@ class UnoGame:
                 yellow_code = colors.ORANGE
         ret = []
         for card in cards:
-            if card in ['W', 'WD4']:
+            if card in ['W', 'WD4']:  # unplayed wilds are a special case that bypasses the normal colorization
                 ret.append(card_tmpl % (wild_code, background, card))
                 continue
-            if 'W' in card:
+            if 'W' in card:  # played wilds must display as '*' instead of 'W' or 'WD4'
                 card = card[0] + '*'
             color_code = ''
             if card[0] == 'B':
