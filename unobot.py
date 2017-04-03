@@ -89,11 +89,11 @@ STRINGS = {
     'CANT_KICK':       "Only %s or a bot admin can kick players from the game.",
     'CANT_CONTINUE':   "You need at least two people to play UNO. RIP.",
     'BAD_COLOR_OPT':   "You must specify on or off for card colors.",
-    'COLOR_SET_ON':    "Will use color codes for %s.",
-    'COLOR_SET_OFF':   "Will print colors for %s.",
+    'COLOR_SET_ON':    "Will use color codes on your UNO turn.",
+    'COLOR_SET_OFF':   "Will print colors on your UNO turn.",
     'THEME_CURRENT':   "You are currently using the %s card theme.",
     'THEME_NEEDED':    "You must specify one of the available themes: %s",
-    'THEME_SET':       "Set %s to use the %s card theme.",
+    'THEME_SET':       "Will use the %s card theme on your UNO turn.",
     'HELP_INTRO':      "I am sending you UNO help privately. If you do not see it, configure your client to show "
                        "non-server notices in the current channel. Cards are sent the same way during game-play.",
     'HELP_LINES':      ["UNO is played using the %pplay, %pdraw, and %ppass commands.",
@@ -763,14 +763,14 @@ class UnoBot:
     def set_card_colors(bot, trigger):
         setting = trigger.group(3).lower() or None
         if not setting or setting not in ['on', 'off', 'yes', 'no']:
-            bot.reply(STRINGS['BAD_COLOR_OPT'])
+            bot.notice(STRINGS['BAD_COLOR_OPT'], trigger.nick)
             return
         if setting in ['on', 'yes']:
             setting = COLORS_ON
-            bot.say(STRINGS['COLOR_SET_ON'] % trigger.nick)
+            bot.notice(STRINGS['COLOR_SET_ON'], trigger.nick)
         elif setting in ['off', 'no']:
             setting = COLORS_OFF
-            bot.say(STRINGS['COLOR_SET_OFF'] % trigger.nick)
+            bot.notice(STRINGS['COLOR_SET_OFF'], trigger.nick)
         bot.db.set_nick_value(trigger.nick, 'uno_colors', setting)
 
     @staticmethod
@@ -785,14 +785,14 @@ class UnoBot:
         theme = trigger.group(3) or None
         if not theme:
             theme = UnoBot.get_card_theme(bot, trigger.nick)
-            bot.say(STRINGS['THEME_CURRENT'] % THEME_NAMES[theme])
+            bot.notice(STRINGS['THEME_CURRENT'] % THEME_NAMES[theme], trigger.nick)
             return
         theme = theme.lower()
         if theme not in THEMES:
-            bot.say(STRINGS['THEME_NEEDED'] % ', '.join(THEMES.keys()))
+            bot.notice(STRINGS['THEME_NEEDED'] % ', '.join(THEMES.keys()), trigger.nick)
             return
         bot.db.set_nick_value(trigger.nick, 'uno_theme', THEMES[theme])
-        bot.say(STRINGS['THEME_SET'] % (trigger.nick, theme))
+        bot.notice(STRINGS['THEME_SET'] % theme, trigger.nick)
 
     @staticmethod
     def get_card_theme(bot, nick):
