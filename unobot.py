@@ -214,21 +214,24 @@ class UnoGame:
         if trigger.nick != self.playerOrder[self.currentPlayer]:
             bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
             return
-        if not trigger.group(3) or not trigger.group(4):
+
+        try:
+            color, card = trigger.group(3).upper(), trigger.group(4).upper()  # raises AttributeError if either missing
+
+            # some gymnastics to support both '.play r d2' and '.play d2 r'
+            if color not in CARD_COLORS:
+                color, card = card, color
+            elif card not in (COLORED_CARD_NUMS + SPECIAL_CARDS):
+                color, card = card, color
+            if color in CARD_COLORS and card in (COLORED_CARD_NUMS + SPECIAL_CARDS):
+                if card in SPECIAL_CARDS:
+                    searchcard = card
+                else:
+                    searchcard = color + card
+            else:  # raise InvalidCardError to indicate that arguments were not valid
+                raise InvalidCardError("Card color or value invalid")
+        except (AttributeError, InvalidCardError):  # insufficient arguments or invalid card
             bot.notice(STRINGS['PLAY_SYNTAX'].replace('%p', bot.config.core.help_prefix), trigger.nick)
-            return
-        color = trigger.group(3).upper()
-        if color in CARD_COLORS:
-            card = trigger.group(4).upper()
-            if card in SPECIAL_CARDS:
-                searchcard = card
-            else:
-                searchcard = color + card
-        elif color in SPECIAL_CARDS:
-            card = color
-            color = trigger.group(4).upper()
-            searchcard = card
-        else:
             return
 
         with lock:
@@ -829,6 +832,10 @@ class UnoBot:
             game.game_moved(bot, who, oldchan, newchan)
         else:
             bot.reply(STRINGS['CANT_MOVE'] % owner)
+
+
+class InvalidCardError(ValueError):
+    pass
 
 
 unobot = UnoBot()
