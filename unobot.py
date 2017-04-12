@@ -761,10 +761,11 @@ class UnoBot:
 
     @staticmethod
     def set_card_colors(bot, trigger):
-        setting = trigger.group(3).lower() or None
-        if not setting or setting not in ['on', 'off', 'yes', 'no']:
+        setting = trigger.group(3) or None
+        if not setting or setting.lower() not in ['on', 'off', 'yes', 'no']:
             bot.notice(STRINGS['BAD_COLOR_OPT'], trigger.nick)
             return
+        setting = setting.lower()
         if setting in ['on', 'yes']:
             setting = COLORS_ON
             bot.notice(STRINGS['COLOR_SET_ON'], trigger.nick)
