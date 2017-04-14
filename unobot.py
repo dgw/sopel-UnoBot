@@ -270,8 +270,8 @@ class UnoGame:
                 bot.notice(STRINGS['DRAWN_ALREADY'],
                            self.playerOrder[self.currentPlayer])
                 return
-            self.drawn = YES
             c = self.get_card()
+            self.drawn = c
             self.players[self.playerOrder[self.currentPlayer]].append(c)
         bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(bot, [c], trigger.nick), trigger.nick)
 
@@ -426,6 +426,8 @@ class UnoGame:
         return bold + ''.join(ret) + CONTROL_NORMAL
 
     def card_playable(self, card):
+        if self.drawn and card != self.drawn:
+            return False
         if 'W' in card and card[0] in CARD_COLORS:
             return True
         with lock:
