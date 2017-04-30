@@ -427,7 +427,10 @@ class UnoGame:
 
     def card_playable(self, card):
         if self.drawn and card != self.drawn:
-            return False
+            if card[1:] == self.drawn:
+                pass
+            else:
+                return False
         if 'W' in card and card[0] in CARD_COLORS:
             return True
         with lock:
