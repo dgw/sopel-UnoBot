@@ -91,6 +91,7 @@ STRINGS = {
     'BAD_COLOR_OPT':   "You must specify on or off for card colors.",
     'COLOR_SET_ON':    "Will use color codes on your UNO turn.",
     'COLOR_SET_OFF':   "Will print colors on your UNO turn.",
+    'COLOR_SET_CUR':   "Current UNO card color code setting: %s.",
     'THEME_CURRENT':   "You are currently using the %s card theme.",
     'THEME_NEEDED':    "You must specify one of the available themes: %s",
     'THEME_SET':       "Will use the %s card theme on your UNO turn.",
@@ -764,8 +765,13 @@ class UnoBot:
 
     @staticmethod
     def set_card_colors(bot, trigger):
-        setting = trigger.group(3).lower() or None
-        if not setting or setting not in ['on', 'off', 'yes', 'no']:
+        setting = trigger.group(3) or None
+        if not setting:
+            setting = 'on' if UnoBot.get_card_colors(bot, trigger.nick) else 'off'
+            bot.notice(STRINGS['COLOR_SET_CUR'] % setting, trigger.nick)
+            return
+        setting = setting.lower()
+        if setting not in ['on', 'off', 'yes', 'no']:
             bot.notice(STRINGS['BAD_COLOR_OPT'], trigger.nick)
             return
         if setting in ['on', 'yes']:
