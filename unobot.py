@@ -501,9 +501,10 @@ class UnoGame:
             return
         with lock:
             pl = self.playerOrder.index(player)
-            self.deadPlayers[player] = self.players.pop(player)
+            removedPlayer = self.players.pop(player)
             self.playerOrder.remove(player)
             if self.startTime:
+                self.deadPlayers[player] = removedPlayer  # issue 49
                 if player == self.owner:
                     self.owner = self.playerOrder[0]
                     if len(self.players) > 1:
