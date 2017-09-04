@@ -1,5 +1,5 @@
 # sopel-UnoBot
-Port of Tamás Márki's unobot.py for Phenny to Sopel 5.5+ (formerly known as Willie)
+Play UNO on IRC with the help of your Sopel bot!
 
 ## Origins
 Original code from http://tmarki.com/wp/2010/02/18/irc-uno-bot-for-phenny/ licensed under the FreeBSD / BSD 2-clause
