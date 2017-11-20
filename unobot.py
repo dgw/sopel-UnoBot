@@ -430,9 +430,9 @@ class UnoGame:
             if card[1:] == self.drawn:
                 pass
             else:
-                return False
+                return NO
         if 'W' in card and card[0] in CARD_COLORS:
-            return True
+            return YES
         with lock:
             if 'W' in self.topCard:
                 return card[0] == self.topCard[0]
