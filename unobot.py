@@ -571,16 +571,16 @@ class UnoBot:
             bot.say(STRINGS['GAME_STARTED'] % self.games[trigger.sender].owner)
 
     def stop(self, bot, trigger, forced=NO):
-        if trigger.sender in self.games:
-            game = self.games[trigger.sender]
-            if trigger.nick == game.owner or trigger.admin or forced:
-                if not forced:
-                    bot.say(STRINGS['GAME_STOPPED'])
-                del self.games[trigger.sender]
-            else:
-                bot.say(STRINGS['CANT_STOP'] % game.owner)
-        else:
+        if trigger.sender not in self.games:
             bot.notice(STRINGS['NOT_STARTED'], trigger.nick)
+            return
+        game = self.games[trigger.sender]
+        if trigger.nick == game.owner or trigger.admin or forced:
+            if not forced:
+                bot.say(STRINGS['GAME_STOPPED'])
+            del self.games[trigger.sender]
+        else:
+            bot.say(STRINGS['CANT_STOP'] % game.owner)
 
     def join(self, bot, trigger):
         if trigger.sender in self.games:
@@ -594,8 +594,6 @@ class UnoBot:
             if game.quit(bot, trigger) == STOP:
                 bot.say(STRINGS['CANT_CONTINUE'])
                 self.stop(bot, trigger, forced=YES)
-        else:
-            return
 
     def kick(self, bot, trigger):
         if trigger.sender in self.games:
@@ -603,8 +601,6 @@ class UnoBot:
             if game.kick(bot, trigger) == STOP:
                 bot.say(STRINGS['CANT_CONTINUE'])
                 self.stop(bot, trigger, forced=YES)
-        else:
-            return
 
     def deal(self, bot, trigger):
         if trigger.sender not in self.games:
@@ -827,23 +823,23 @@ class UnoBot:
             bot.reply(STRINGS['NOT_STARTED'])
             return
         owner = self.games[oldchan].owner
-        if trigger.admin or who == owner:
-            if not newchan:
-                bot.reply(STRINGS['NEED_CHANNEL'])
-                return
-            if newchan == oldchan:
-                return
-            if newchan.lower() not in bot.privileges:
-                bot.reply(STRINGS['NOT_IN_CHANNEL'] % newchan)
-                return
-            if newchan in self.games:
-                bot.reply(STRINGS['CHANNEL_IN_USE'] % newchan)
-                return
-            game = self.games.pop(oldchan)
-            self.games[newchan] = game
-            game.game_moved(bot, who, oldchan, newchan)
-        else:
+        if not (trigger.admin or who == owner):
             bot.reply(STRINGS['CANT_MOVE'] % owner)
+            return
+        if not newchan:
+            bot.reply(STRINGS['NEED_CHANNEL'])
+            return
+        if newchan == oldchan:
+            return
+        if newchan.lower() not in bot.privileges:
+            bot.reply(STRINGS['NOT_IN_CHANNEL'] % newchan)
+            return
+        if newchan in self.games:
+            bot.reply(STRINGS['CHANNEL_IN_USE'] % newchan)
+            return
+        game = self.games.pop(oldchan)
+        self.games[newchan] = game
+        game.game_moved(bot, who, oldchan, newchan)
 
 
 class InvalidCardError(ValueError):
