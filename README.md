@@ -2,14 +2,16 @@
 Play UNO on IRC with the help of your Sopel bot!
 
 ## Origins
-Original code from http://tmarki.com/wp/2010/02/18/irc-uno-bot-for-phenny/ licensed under the FreeBSD / BSD 2-clause
-license and copyright Tamás Márki.
+Original code from [http://tmarki.com/wp/2010/02/18/irc-uno-bot-for-phenny/][src-wayback] licensed under the
+FreeBSD / BSD 2-clause license and copyright Tamás Márki.
 
 The original code was itself a port of a mIRC script, probably the one found at http://hawkee.com/snippet/5301/
 
 There is also an unobot.py version maintained within the @myano/jenni repo, but it is as different from this version
 as this version is from the code it was built on. A few ideas from that repo may make their way into this one at some
 point, but most of the development here up to now was done before discovering the other fork.
+
+[src-wayback]: https://web.archive.org/web/20150923230822/http://tmarki.com/wp/2010/02/18/irc-uno-bot-for-phenny/ (Web Archive of source blog post)
 
 ## Changes
 This fork includes (but is not limited to including) the following updates:
