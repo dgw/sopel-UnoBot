@@ -132,6 +132,7 @@ class UnoGame:
         self.smallestHand = HAND_SIZE
         self.deck = []
         self.startTime = None
+        self.dealt = NO
 
     def join(self, bot, trigger):
         with lock:
@@ -202,6 +203,7 @@ class UnoGame:
             self.topCard = self.get_card()
             while self.topCard in ['W', 'WD4']:
                 self.topCard = self.get_card()
+            self.dealt = YES
             self.currentPlayer = random.randrange(len(self.players))  # issue #6
             self.card_played(bot, self.topCard)
             self.show_on_turn(bot)
@@ -476,8 +478,7 @@ class UnoGame:
                 self.deck = self.create_deck()
         return ret
 
-    @staticmethod
-    def create_deck():
+    def create_deck(self):
         new_deck = []
         for card in (COLORED_CARD_NUMS + COLORED_CARD_NUMS[1:]):
             for color in CARD_COLORS:
@@ -486,6 +487,13 @@ class UnoGame:
             new_deck.extend([card] * 4)
 
         new_deck *= 2
+
+        if self.dealt:  # don't filter the deck if no cards have been dealt yet
+            new_deck.remove(self.topCard)
+            for hand in self.players:
+                for card in hand:
+                    new_deck.remove(card)
+
         random.shuffle(new_deck)
         random.shuffle(new_deck)
         return new_deck
