@@ -1055,7 +1055,3 @@ def unomove(bot, trigger):
 @module.priority('high')
 def uno_glue(bot, trigger):
     unobot.nick_change(bot, trigger)
-
-
-if __name__ == '__main__':
-    print __doc__.strip()
