@@ -579,14 +579,15 @@ class UnoBot:
             bot.say(STRINGS['GAME_STARTED'] % self.games[trigger.sender].owner)
 
     def stop(self, bot, trigger, forced=NO):
-        if trigger.sender not in self.games:
+        chan = tools.Identifier(trigger.group(3) or trigger.sender)
+        if chan not in self.games:
             bot.notice(STRINGS['NOT_STARTED'], trigger.nick)
             return
-        game = self.games[trigger.sender]
+        game = self.games[chan]
         if trigger.nick == game.owner or trigger.admin or forced:
             if not forced:
                 bot.say(STRINGS['GAME_STOPPED'])
-            del self.games[trigger.sender]
+            del self.games[chan]
         else:
             bot.say(STRINGS['CANT_STOP'] % game.owner)
 
