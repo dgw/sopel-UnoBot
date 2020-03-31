@@ -41,6 +41,7 @@ lock = threading.RLock()
 STRINGS = {
     'GAME_STARTED':    "IRC-UNO started by %s - Type join to join!",
     'GAME_STOPPED':    "Game stopped.",
+    'REMOTE_STOP':     "Game stopped in %s by %s.",
     'CANT_STOP':       "%s is the game owner, you can't stop it!",
     'DEALING_IN':      "Dealing %s into the game as player #%s!",
     'DEALING_BACK':    "Here, %s, I saved your cards. You're back in the game as player #%s.",
@@ -587,6 +588,8 @@ class UnoBot:
         if trigger.nick == game.owner or trigger.admin or forced:
             if not forced:
                 bot.say(STRINGS['GAME_STOPPED'])
+                if trigger.sender != chan:
+                    bot.say(STRINGS['REMOTE_STOP'] % (trigger.sender, trigger.nick), chan)
             del self.games[chan]
         else:
             bot.say(STRINGS['CANT_STOP'] % game.owner)
