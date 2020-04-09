@@ -63,7 +63,9 @@ STRINGS = {
     'DONT_HAVE':       "You don't have that card!",
     'DOESNT_PLAY':     "That card can't be played now.",
     'UNO':             "UNO! %s has ONE card left!",
-    'UNO_LIED':        "%s draws two cards for lying about having UNO!",
+    'CHALLENGE_FALSE': "Challenging failure to call UNO does not make sense at this time.",
+    'CHALLENGE_TRUE':  "%s caught %s forgetting to call UNO! Two penalty cards dealt.",
+    'CHALLENGE_NONE':  "%s holds more than one card. Challenge is void.",
     'WIN':             "We have a winner: %s!!! This game took %s",
     'DRAWN_ALREADY':   "You've already drawn, either play or pass.",
     'DRAWN_CARD':      "You drew: %s",
@@ -251,26 +253,41 @@ class UnoGame:
             self.inc_player()
             self.card_played(bot, playcard)
 
-            if len(self.players[self.playerOrder[pl]]) == 1:
-                bot.say(STRINGS['UNO'] % self.playerOrder[pl])
-            elif len(self.players[self.playerOrder[pl]]) == 0:
+            if len(self.players[self.playerOrder[pl]]) == 0:
                 return WIN
             self.show_on_turn(bot)
 
     def call_uno(self, bot, trigger):
+        if not self.dealt:
+            return
+
         caller = trigger.nick
-        if self.unoCalled:
-            return  # UNO was already called this turn
-        if caller != self.playerOrder[self.currentPlayer]:
-            return  # it isn't this player's turn
-        self.unoCalled = YES
-        caller = trigger.nick
-        with lock:
-            if len(self.players[caller]) != 1:
-                bot.say(STRINGS['UNO_LIED'] % caller)
+        if caller not in (self.playerOrder[self.currentPlayer], self.playerOrder[self.previousPlayer]):
+            # only the current or previous player can call UNO
+            bot.say(STRINGS['ON_TURN'] % self.playerOrder[self.currentPlayer])
+            return
+        if self.unoCalled == caller:
+            # UNO was already called this turn
+            return
+        self.unoCalled = caller
+        bot.say(STRINGS['UNO'] % caller)
+
+    def challenge_uno(self, bot, trigger):
+        if not self.dealt:
+            return
+
+        prev = self.playerOrder[self.previousPlayer]
+        if len(self.players[prev]) == 1:
+            if self.unoCalled == prev:
+                bot.say(STRINGS['CHALLENGE_FALSE'])
+                return
+            else:
+                bot.say(STRINGS['CHALLENGE_TRUE'] % (trigger.nick, prev))
                 z = [self.get_card(), self.get_card()]
-                self.players[caller].extend(z)
-                bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(bot, z, caller), caller)
+                self.players[prev].extend(z)
+                bot.notice(STRINGS['DRAWN_CARD'] % self.render_cards(bot, z, prev), prev)
+        else:
+            bot.say(STRINGS['CHALLENGE_NONE'] % prev)
 
     def draw(self, bot, trigger):
         if not self.deck:
@@ -496,7 +513,9 @@ class UnoGame:
                 self.currentPlayer = 0
             if self.currentPlayer < 0:
                 self.currentPlayer = len(self.players) - 1
-            self.unoCalled = NO  # Reset flag on every turn
+            if self.unoCalled != self.previousPlayer:
+                # Reset once it's too late to challenge a missed UNO call
+                self.unoCalled = NO
 
     def remove_player(self, bot, player):
         if len(self.players) == 1:
@@ -628,6 +647,11 @@ class UnoBot:
         if trigger.sender not in self.games:
             return
         self.games[trigger.sender].call_uno(bot, trigger)
+
+    def challenge_uno(self, bot, trigger):
+        if trigger.sender not in self.games:
+            return
+        self.games[trigger.sender].challenge_uno(bot, trigger)
 
     def draw(self, bot, trigger):
         if trigger.sender not in self.games:
@@ -907,8 +931,15 @@ def unoplay(bot, trigger):
 @module.rule('^uno!?$')
 @module.priority('high')
 @module.require_chanmsg
-def unocalled(bot, trigger):
+def unocall(bot, trigger):
     unobot.call_uno(bot, trigger)
+
+
+@module.commands('unofail')
+@module.priority('medium')
+@module.require_chanmsg
+def unofail(bot, trigger):
+    unobot.challenge_uno(bot, trigger)
 
 
 @module.commands('draw')
