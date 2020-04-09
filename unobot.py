@@ -41,6 +41,7 @@ lock = threading.RLock()
 STRINGS = {
     'GAME_STARTED':    "IRC-UNO started by %s - Type join to join!",
     'GAME_STOPPED':    "Game stopped.",
+    'REMOTE_STOP':     "Game stopped in %s by %s.",
     'CANT_STOP':       "%s is the game owner, you can't stop it!",
     'DEALING_IN':      "Dealing %s into the game as player #%s!",
     'DEALING_BACK':    "Here, %s, I saved your cards. You're back in the game as player #%s.",
@@ -579,14 +580,17 @@ class UnoBot:
             bot.say(STRINGS['GAME_STARTED'] % self.games[trigger.sender].owner)
 
     def stop(self, bot, trigger, forced=NO):
-        if trigger.sender not in self.games:
+        chan = tools.Identifier(trigger.group(3) or trigger.sender)
+        if chan not in self.games:
             bot.notice(STRINGS['NOT_STARTED'], trigger.nick)
             return
-        game = self.games[trigger.sender]
+        game = self.games[chan]
         if trigger.nick == game.owner or trigger.admin or forced:
             if not forced:
                 bot.say(STRINGS['GAME_STOPPED'])
-            del self.games[trigger.sender]
+                if trigger.sender != chan:
+                    bot.say(STRINGS['REMOTE_STOP'] % (trigger.sender, trigger.nick), chan)
+            del self.games[chan]
         else:
             bot.say(STRINGS['CANT_STOP'] % game.owner)
 
