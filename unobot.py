@@ -63,6 +63,7 @@ STRINGS = {
     'ON_TURN':         "It's %s's turn.",
     'DONT_HAVE':       "You don't have that card!",
     'DOESNT_PLAY':     "That card can't be played now.",
+    'NO_RENEGING':     "Reneging is not allowed: You may only play the drawn card after drawing.",
     'UNO':             "UNO! %s has ONE card left!",
     'WIN':             "We have a winner: %s!!! This game took %s",
     'DRAWN_ALREADY':   "You've already drawn, either play or pass.",
@@ -246,6 +247,10 @@ class UnoGame:
             playcard = color + card
             if not self.card_playable(playcard):
                 bot.notice(STRINGS['DOESNT_PLAY'],
+                           self.playerOrder[pl])
+                return
+            if self.card_reneges(playcard):
+                bot.notice(STRINGS['NO_RENEGING'],
                            self.playerOrder[pl])
                 return
             self.drawn = NO
@@ -433,11 +438,6 @@ class UnoGame:
         return bold + ''.join(ret) + CONTROL_NORMAL
 
     def card_playable(self, card):
-        if self.drawn and card != self.drawn:
-            if card[1:] == self.drawn:
-                pass
-            else:
-                return NO
         if 'W' in card and card[0] in CARD_COLORS:
             return YES
         with lock:
@@ -445,6 +445,15 @@ class UnoGame:
                 return card[0] == self.topCard[0]
             return ((card[0] == self.topCard[0]) or
                     (card[1] == self.topCard[1])) and ('W' not in card)
+
+    def card_reneges(self, card):
+        if self.drawn and card != self.drawn:
+            if card[1:] == self.drawn:
+                return NO
+            else:
+                return YES
+        else:
+            return NO
 
     def card_played(self, bot, card):
         with lock:
