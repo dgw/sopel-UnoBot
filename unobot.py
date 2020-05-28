@@ -16,7 +16,6 @@ if sys.version_info.major < 3:
     range = xrange
     str = unicode
 
-SCOREFILE = "/var/lib/sopel/unoscores.txt"
 HAND_SIZE = 7
 MINIMUM_HAND_FOR_JOIN = 5
 
@@ -576,9 +575,9 @@ class UnoGame:
 
 
 class UnoBot:
-    def __init__(self):
+    def __init__(self, scorefile):
         self.special_scores = {'R': 20, 'S': 20, 'D2': 20, 'WD4': 50, 'W': 50}
-        self.scoreFile = SCOREFILE
+        self.scoreFile = scorefile
         self.games = {}
 
     def start(self, bot, trigger):
@@ -867,7 +866,13 @@ class InvalidCardError(ValueError):
     pass
 
 
-unobot = UnoBot()
+# With all the scaffolding in place, we can set up the bot to play (finally)
+def setup(bot):
+    bot.memory['UnoBot'] = UnoBot(bot.config.core.homedir + 'unoscores.txt')
+
+
+def shutdown(bot):
+    del bot.memory['UnoBot']
 
 
 @module.commands('uno')
@@ -878,7 +883,7 @@ def unostart(bot, trigger):
     """
     Start UNO in the current channel.
     """
-    unobot.start(bot, trigger)
+    bot.memory['UnoBot'].start(bot, trigger)
 
 
 @module.commands('unostop')
@@ -889,56 +894,56 @@ def unostop(bot, trigger):
     """
     Stops an UNO game in progress.
     """
-    unobot.stop(bot, trigger)
+    bot.memory['UnoBot'].stop(bot, trigger)
 
 
 @module.rule('^join$')
 @module.priority('high')
 @module.require_chanmsg
 def unojoin(bot, trigger):
-    unobot.join(bot, trigger)
+    bot.memory['UnoBot'].join(bot, trigger)
 
 
 @module.rule('^quit$')
 @module.priority('high')
 @module.require_chanmsg
 def unoquit(bot, trigger):
-    unobot.quit(bot, trigger)
+    bot.memory['UnoBot'].quit(bot, trigger)
 
 
 @module.commands('unokick')
 @module.priority('high')
 @module.require_chanmsg
 def unokick(bot, trigger):
-    unobot.kick(bot, trigger)
+    bot.memory['UnoBot'].kick(bot, trigger)
 
 
 @module.commands('deal')
 @module.priority('medium')
 @module.require_chanmsg
 def unodeal(bot, trigger):
-    unobot.deal(bot, trigger)
+    bot.memory['UnoBot'].deal(bot, trigger)
 
 
 @module.commands('play')
 @module.priority('medium')
 @module.require_chanmsg
 def unoplay(bot, trigger):
-    unobot.play(bot, trigger)
+    bot.memory['UnoBot'].play(bot, trigger)
 
 
 @module.commands('draw')
 @module.priority('medium')
 @module.require_chanmsg
 def unodraw(bot, trigger):
-    unobot.draw(bot, trigger)
+    bot.memory['UnoBot'].draw(bot, trigger)
 
 
 @module.commands('pass')
 @module.priority('medium')
 @module.require_chanmsg
 def unopass(bot, trigger):
-    unobot.pass_(bot, trigger)
+    bot.memory['UnoBot'].pass_(bot, trigger)
 
 
 @module.commands('fuck')
@@ -946,7 +951,7 @@ def unopass(bot, trigger):
 @module.priority('medium')
 @module.require_chanmsg
 def fml(bot, trigger):
-    unobot.fml(bot, trigger)
+    bot.memory['UnoBot'].fml(bot, trigger)
 
 
 @module.commands('cards')
@@ -957,7 +962,7 @@ def unocards(bot, trigger):
     """
     Retrieve your current UNO hand for the current channel's game.
     """
-    unobot.send_cards(bot, trigger)
+    bot.memory['UnoBot'].send_cards(bot, trigger)
 
 
 @module.commands('counts')
@@ -968,7 +973,7 @@ def unocounts(bot, trigger):
     """
     Sends current UNO card counts to the channel, if a game is in progress.
     """
-    unobot.send_counts(bot, trigger)
+    bot.memory['UnoBot'].send_counts(bot, trigger)
 
 
 @module.commands('unocolor', 'unocolour', 'unocolors', 'unocolours')
@@ -978,7 +983,7 @@ def unocolor(bot, trigger):
     """
     Set colored cards on or off. Disabling color will present cards in an alternate format.
     """
-    unobot.set_card_colors(bot, trigger)
+    bot.memory['UnoBot'].set_card_colors(bot, trigger)
 
 
 @module.commands('unotheme')
@@ -1012,7 +1017,7 @@ def unotop(bot, trigger):
     """
     Shows the top 5 players by score. Unlike most UNO commands, can be sent in a PM.
     """
-    unobot.rankings(bot, trigger, YES)
+    bot.memory['UnoBot'].rankings(bot, trigger, YES)
 
 
 @module.commands('unorank')
@@ -1023,7 +1028,7 @@ def unorank(bot, trigger):
     """
     Shows the ranking, by accumulated UNO points, of the calling player or the specified nick.
     """
-    unobot.rankings(bot, trigger, NO)
+    bot.memory['UnoBot'].rankings(bot, trigger, NO)
 
 
 @module.commands('unogames')
@@ -1034,8 +1039,8 @@ def unogames(bot, trigger):
     active = 0
     pending = 0
     with lock:
-        for chan in unobot.games.keys():
-            if unobot.games[chan].startTime:
+        for chan, game in bot.memory['UnoBot'].games.items():
+            if game.startTime:
                 chans.append(chan)
                 active += 1
             else:
@@ -1048,7 +1053,8 @@ def unogames(bot, trigger):
     g_pending = "channel" if pending == 1 else "channels"
     chanlist = ", ".join(chans[:-2] + [" and ".join(chans[-2:])])
     bot.reply(
-        "UNO is pending deal in %d %s and in progress in %d %s: %s." % (pending, g_pending, active, g_active, chanlist))
+        "UNO is pending deal in %d %s and in progress in %d %s: %s."
+        % (pending, g_pending, active, g_active, chanlist))
 
 
 @module.commands('unomove')
@@ -1059,7 +1065,7 @@ def unomove(bot, trigger):
     Lets the game owner or a bot admin move an UNO game from one channel to another,
     assuming there's no game happening in that channel.
     """
-    unobot.move_game(bot, trigger)
+    bot.memory['UnoBot'].move_game(bot, trigger)
 
 
 # Track nick changes
@@ -1067,4 +1073,4 @@ def unomove(bot, trigger):
 @module.rule('.*')
 @module.priority('high')
 def uno_glue(bot, trigger):
-    unobot.nick_change(bot, trigger)
+    bot.memory['UnoBot'].nick_change(bot, trigger)
