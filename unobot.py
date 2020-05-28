@@ -6,6 +6,7 @@ import sopel.module as module
 import sopel.tools as tools
 from sopel.formatting import colors, CONTROL_BOLD, CONTROL_COLOR, CONTROL_NORMAL
 import json
+import os
 import random
 import sys
 import threading
@@ -868,7 +869,7 @@ class InvalidCardError(ValueError):
 
 # With all the scaffolding in place, we can set up the bot to play (finally)
 def setup(bot):
-    bot.memory['UnoBot'] = UnoBot(bot.config.core.homedir + 'unoscores.txt')
+    bot.memory['UnoBot'] = UnoBot(os.path.join(bot.config.core.homedir, 'unoscores.txt'))
 
 
 def shutdown(bot):
